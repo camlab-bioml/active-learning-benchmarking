@@ -1,0 +1,23 @@
+cell_types:
+    GMP:
+      positive:
+        - CD34
+        - CD16-32
+        - cKit
+      negative:
+        - Sca1
+        - CD115
+        - CD11b
+        - CD3
+        - CD49b
+        - B220
+        - 120g8
+
+    IgD- IgMpos B cells:
+      positive:
+        - IgM
+        - B220
+      negative:
+        - IgD
+        - CD43
+        - 120g8

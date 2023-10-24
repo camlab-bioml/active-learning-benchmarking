@@ -1,0 +1,45 @@
+cell_types:
+  Mono+mono derived cells:
+    positive:
+      - CD44
+      - CXCL10
+      - FCN1
+      - GBP1
+      - HLA-DRA
+      - IFIT1
+      - IFIT3
+      - IFITM3
+      - IRF7
+      - MNDA
+      - MX1
+      - OAS1
+      - PLSCR1
+      - PSAP
+      - PTPRC
+      - S100A4
+      - S100A8
+      - S100A9
+      - TNFSF10
+      - ZFP36L2
+  T cells:
+    positive:
+      - CCL5
+      - CCR7
+      - CD2
+      - CD247
+      - CD3D
+      - CD3E
+      - CD3G
+      - CD52
+      - CD69
+      - CD7
+      - CLEC2D
+      - CREM
+      - CXCR4
+      - IL32
+      - IL7R
+      - JUNB
+      - LCK
+      - LTB
+      - S100A4
+      - TNFAIP3

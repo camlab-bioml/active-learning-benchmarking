@@ -1,0 +1,71 @@
+cell_types:
+    A549:
+      positive:
+        - AKR1C3
+        - AKR1C2
+        - AKR1C1
+        - ALDH3A1
+        - S100A4
+        - AKR1B10
+        - GPX2
+        - ALDH1A1
+        - KRT81
+        - CPLX2
+        - AGR2
+        - SNHG5
+        - PPP1R14A
+        - KRT18
+    
+    HCC827:
+      positive:
+        - RPL26
+        - SFTA2
+        - OS9
+        - SEC61G
+        - RPL7P9
+        - RPL7
+        - CDK4
+        - CDKN2A
+    
+    H2228:
+      positive:
+        - CXCL1
+        - CD74
+        - SAA1
+        - HLA-B
+        - B2M
+        - PDZK1IP1
+        - LCN2
+        - RPL35A
+        - OCIAD2
+        - XAGE1B
+      negative:
+        - KRT18
+        - RPL26
+    
+    H1975:
+      positive:
+        - XAGE1B
+        - OCIAD2
+        - CDKN2A
+        - RPL26
+        - SNHG5
+      negative:
+        - LCN2
+        - PDZK1IP1
+        - SAA1
+    
+    H838:
+      positive:
+        - MAGEA6
+        - GAGE13
+        - CTAG2
+        - GAGE2E
+        - GAGE2A
+        - GAGE12J
+        - GAGE12H
+        - GAGE12G
+        - GAGE12E
+        - GAGE12D
+
+  

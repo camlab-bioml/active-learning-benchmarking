@@ -1,0 +1,28 @@
+cell_types:
+    A549:
+      positive:
+        - AKR1C3
+        - AKR1C2
+        - AKR1C1
+        - ALDH3A1
+        - S100A4
+        - AKR1B10
+        - GPX2
+        - ALDH1A1
+        - KRT81
+        - CPLX2
+        - AGR2
+        - SNHG5
+        - PPP1R14A
+        - KRT18
+    
+    HCC827:
+      positive:
+        - RPL26
+        - SFTA2
+        - OS9
+        - SEC61G
+        - RPL7P9
+        - RPL7
+        - CDK4
+        - CDKN2A

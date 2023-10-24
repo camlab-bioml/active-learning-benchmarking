@@ -1,0 +1,16 @@
+cell_types:
+  Atypical_Ductal:
+    positive:
+      - CFTR
+      - KRT19
+    negative:
+      - KRT5
+  
+  Tumor:
+    positive:
+      - KRT7
+      - KRT17
+      - KRT19
+      - EPCAM
+      - CEACAM6
+      - KRT5

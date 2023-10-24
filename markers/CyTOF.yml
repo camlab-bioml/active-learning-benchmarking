@@ -1,0 +1,246 @@
+cell_types:
+  Eosinophils:
+    positive:
+      - CD11b
+      - SiglecF
+  
+  # # Plasma Cells:
+  # #   positive:
+  # #     - IgM
+  # #     - CD138
+
+  pDCs:
+    positive:
+      - B220
+      - 120g8
+
+  NKT cells:
+    positive:
+      - CD3
+      - CD49b
+    negative:
+      - B220
+      - 120g8
+
+  # # mDCs:
+  # #   positive:
+  # #     - MHCII
+  # #     - CD11c
+  # #   negative:
+  # #     - CD3
+  # #     - CD49b
+  # #     - B220
+  # #     - 120g8
+
+  # Macrophages:
+  #   positive:
+  #     - F480
+  #     - CD64
+  #   negative:
+  #     - CD3
+  #     - CD49b
+  #     - B220
+  #     - 120g8
+
+  Classical Monocytes:
+    positive:
+      - Ly6C
+      - CD11b
+    negative:
+      - CD43
+      - CD3
+      - CD49b
+      - B220
+      - 120g8
+
+  Intermediate Monocytes:
+    positive:
+      - Ly6C
+      - CD43
+      - CD11b
+    negative:
+      - CD3
+      - CD49b
+      - B220
+      - 120g8
+
+  # Non-Classical Monocytes:
+  #   positive:
+  #     - CD43
+  #     - CD11b
+  #   negative:
+  #     - Ly6C
+  #     - CD3
+  #     - CD49b
+  #     - B220
+  #     - 120g8
+
+  # MEP:
+  #   positive:
+  #     - cKit
+  #   negative:
+  #     - CD16-32
+  #     - CD34
+  #     - Sca1
+  #     - CD115
+  #     - CD11b
+  #     - CD3
+  #     - CD49b
+  #     - B220
+  #     - 120g8
+
+  # CMP:
+  #   positive:
+  #     - cKit
+  #     - CD34
+  #   negative:
+  #     - CD16-32
+  #     - Sca1
+  #     - CD115
+  #     - CD11b
+  #     - CD3
+  #     - CD49b
+  #     - B220
+  #     - 120g8
+
+  # GMP:
+  #   positive:
+  #     - CD34
+  #     - CD16-32
+  #     - cKit
+  #   negative:
+  #     - Sca1
+  #     - CD115
+  #     - CD11b
+  #     - CD3
+  #     - CD49b
+  #     - B220
+  #     - 120g8
+
+  # CLP:
+  #   positive:
+  #     - CD43
+  #     - Sca1
+  #     - cKit
+  #   negative:
+  #     - CD115
+  #     - CD11b
+  #     - CD3
+  #     - CD49b
+  #     - B220
+  #     - 120g8
+      
+  # MPP:
+  #   positive:
+  #     - CD34
+  #     - Sca1
+  #     - cKit
+  #   negative:
+  #     - CD115
+  #     - CD11b
+  #     - CD3
+  #     - CD49b
+  #     - B220
+  #     - 120g8
+
+  # # HSC:
+  # #   positive:
+  # #     - Sca1
+  # #     - cKit
+  # #   negative:
+  # #     - CD34
+  # #     - CD115
+  # #     - CD11b
+  # #     - CD3
+  # #     - CD49b
+  # #     - B220
+  # #     - 120g8
+
+  # Basophils:
+  #   positive:
+  #     - FceR1a
+  #     - CD49b
+  #   negative:
+  #     - NKp46
+  #     - CD3
+  #     - B220
+  #     - 120g8
+
+  NK cells:
+    positive:
+      - NKp46
+      - CD49b
+    negative:
+      - FceR1a
+      - CD3
+      - B220
+      - 120g8
+
+  CD4 T cells:
+    positive:
+      - CD4
+      - TCRb
+      - CD3
+    negative:
+      - CD8
+      - TCRgd
+      - CD49b
+      - B220
+      - 120g8
+
+  CD8 T cells:
+    positive:
+      - CD8
+      - TCRb
+      - CD3
+    negative:
+      - CD4
+      - TCRgd
+      - CD49b
+      - B220
+      - 120g8
+
+  # # gd T cells:
+  # #   positive:
+  # #     - TCRgd
+  # #     - CD3
+  # #   negative:
+  # #     - TCRb
+  # #     - CD49b
+  # #     - B220
+  # #     - 120g8
+
+  IgDpos IgMpos B cells:
+    positive:
+      - IgM
+      - IgD
+      - B220
+    negative:
+      - CD43
+      - 120g8
+
+  IgD- IgMpos B cells:
+    positive:
+      - IgM
+      - B220
+    negative:
+      - IgD
+      - CD43
+      - 120g8
+
+  IgM- IgD- B-cells:
+    positive:
+      - B220
+    negative: 
+      - IgM
+      - IgD
+      - CD43
+      - 120g8
+
+  # B-cell Frac A-C (pro-B cells):
+  #   positive:
+  #     - CD43
+  #     - B220
+  #   negative:
+  #     - 120g8
+

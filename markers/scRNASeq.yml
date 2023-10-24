@@ -1,0 +1,117 @@
+cell_types:
+  AU565:
+    positive:
+      - NDUFB9
+      - ERBB2
+      - DHRS2
+      - GSDMB
+      - DECR1
+      - KRT81
+      - S100P
+      - S100A9
+  
+  MCF7:
+    positive:
+      - PSMD6
+      - BCAS3
+      - SPTSSB
+      - TFF1
+      - KRT8
+      - AGR2
+  
+  CAMA1:
+    positive:
+      - BACH1
+      - IGFBP5
+      - ANKRD30A
+      - SERF2
+      - GATA3
+  
+  BT483:
+    positive:
+      - CRABP2
+      - CRIP2
+      - SMIM22
+      - RAB11FIP1
+      - KRT19
+      - ITM2B
+      - FXYD3
+  
+  CAL851:
+    positive:
+      - IFI27
+      - KRT86
+      - RARRES1
+      - AKR1B1
+      - KRT7
+      - CDKN2A
+    negative:
+      - SLPI
+  
+  HDQP1:
+    positive:
+      - AKR1B1
+      - RARRES1
+      - ITGB1
+      - EEF1A1
+      - KRT7
+      - CDKN2A
+      - SLPI
+      - KRT13
+      - BTBD16
+    negative:
+      - IFI27
+      - KRT86
+  
+  HCC1937:
+    positive:
+      - CRABP2
+      - FXYD3
+      - IFI27
+      - KLK5
+      - KRT13
+      - BTBD16
+      - SLPI
+      - CDKN2A
+      - KRT7
+    negative:
+      - KRT19
+      - EEF1A1
+      - LDHA
+  
+  JIMT1:
+    positive:
+      - LDHA
+      - PSMD3
+      - OXTR
+      - ARL14EPL
+      - KRBOX1
+      - CD44
+      - COTL1
+  
+  MDAMB468:
+    positive:
+      - SAT1
+      - MAGEA12
+      - CSAG1
+      - SEC61G
+      - KRT23
+      - EGFR
+      - LANCL2
+  
+  CAL51:
+    positive:
+      - MDK
+      - PDPN
+      - ALDH1A1
+      - COBLL1
+      - HMGA2
+      - IFITM3
+      - CALD1
+      - GSTP1
+      - LDHB
+      - FTL
+    negative:
+      - KRT19
+      - FXYD3
+

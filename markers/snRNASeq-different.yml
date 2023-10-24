@@ -1,0 +1,60 @@
+cell_types:
+    Immune:
+      positive:
+        - PTPRC
+        - MS4A1
+        - CD74
+        - CD68
+        - MRC1
+        - CD80
+        - CD86
+        - TGFB1
+        - CSF1
+        - TLR2
+        - ITGB2
+        - ITGAM
+        - CTSA
+        - NLRP3
+        - CLEC7A
+        - BST1
+        - STAB1
+        - IRAK3
+        - CD163
+        - CPA3
+        - XCR1
+        - CLEC9A
+        - CD1A
+        - CD207
+        - CD1E
+        - FCER1A
+        - LAMP3
+        - CCL19
+        - CCR7
+        - GZMB
+        - IRF7
+        - IRF4
+        - CD4
+        - CD8A
+        - CD8B
+        - CD3D
+        - THEMIS
+        - CD96
+        - IKZF1
+        - GZMA
+        - FOXP3
+        - BANK1
+        - CD19
+        - KLRD1
+        - IL18R1
+        - CSF3R
+        - CXCL8
+
+    Tumor:
+      positive:
+        - KRT7
+        - KRT17
+        - KRT19
+        - EPCAM
+        - CEACAM6
+        - KRT5
+  

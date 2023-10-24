@@ -1,0 +1,26 @@
+cell_types:
+  HCC1937:
+    positive:
+      - CRABP2
+      - FXYD3
+      - IFI27
+      - KLK5
+      - KRT13
+      - BTBD16
+      - SLPI
+      - CDKN2A
+      - KRT7
+    negative:
+      - KRT19
+      - EEF1A1
+      - LDHA
+  
+  MDAMB468:
+    positive:
+      - SAT1
+      - MAGEA12
+      - CSAG1
+      - SEC61G
+      - KRT23
+      - EGFR
+      - LANCL2

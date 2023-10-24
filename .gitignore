@@ -1,0 +1,7 @@
+output/*
+*.Rproj
+.Rproj.user
+.snakemake/*
+slurm*
+data/*
+.Rhistory

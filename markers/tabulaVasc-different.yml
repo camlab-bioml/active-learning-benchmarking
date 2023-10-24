@@ -1,0 +1,46 @@
+cell_types:
+    smooth muscle cell:
+      positive:
+        - MYH11
+        - MYL9
+        - MYLK
+        - ACTA2
+        - SOD3
+        - LMOD1
+        - BGN
+        - PLN
+        - CNN1
+        - NOTCH3
+        - ACTG2
+        - MSRB3
+        - SNCG
+        - NEXN
+        - SMTN
+        - EHD2
+        - WFDC1
+        - RRAD
+        - GJA4
+        - AOC3
+    endothelial cell:
+      positive:
+        - GNG11
+        - CLDN5
+        - S100A10
+        - TM4SF1
+        - ID3
+        - EGFL7
+        - IGFBP7
+        - SPARC
+        - ECSCR
+        - ENG
+        - RNASE1
+        - CAV1
+        - PECAM1
+        - SRGN
+        - ADGRL4
+        - CLEC14A
+        - ID1
+        - TIMP3
+        - EMP1
+        - PCAT19
+  

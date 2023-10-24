@@ -1,0 +1,121 @@
+cell_types:
+  Acinar:
+    positive:
+      - CPB1
+      - PRSS3
+      - REG3A
+      - REG3G
+      - REG1B
+        
+  Atypical_Ductal:
+    positive:
+      - CFTR
+      - KRT19
+    negative:
+      - KRT5
+    
+  Ductal:
+    positive:
+      - CFTR
+    negative:
+      - KRT5
+  
+  Endocrine:
+    positive:
+      - GCG
+      - INS
+      - IAPP
+      - SST
+      - PPY
+      - GHRL
+
+  Endothelial:
+    positive:
+      - PECAM1
+      - VWF
+      - ESAM
+      - FLT1
+      - EPAS1
+      - FLT4
+      - SEMA3A
+      - SEMA3D
+
+  Fibroblast:
+    positive:
+      - COL1A1
+      - FN1
+      - PDPN
+      - DCN
+      - VIM
+      - FAP
+      - ACTA2
+
+  Immune:
+    positive:
+      - PTPRC
+      - MS4A1
+      - CD74
+      - CD68
+      - MRC1
+      - CD80
+      - CD86
+      - TGFB1
+      - CSF1
+      - TLR2
+      - ITGB2
+      - ITGAM
+      - CTSA
+      - NLRP3
+      - CLEC7A
+      - BST1
+      - STAB1
+      - IRAK3
+      - CD163
+      - CPA3
+      - XCR1
+      - CLEC9A
+      - CD1A
+      - CD207
+      - CD1E
+      - FCER1A
+      - LAMP3
+      - CCL19
+      - CCR7
+      - GZMB
+      - IRF7
+      - IRF4
+      - CD4
+      - CD8A
+      - CD8B
+      - CD3D
+      - THEMIS
+      - CD96
+      - IKZF1
+      - GZMA
+      - FOXP3
+      - BANK1
+      - CD19
+      - KLRD1
+      - IL18R1
+      - CSF3R
+      - CXCL8
+
+  Schwann:
+    positive:
+      - SOX10
+      - S100B
+
+  SmoothMuscle:
+    positive:
+      - MYH11
+      - MYOCD
+      - ACTA2
+  
+  Tumor:
+    positive:
+      - KRT7
+      - KRT17
+      - KRT19
+      - EPCAM
+      - CEACAM6
+      - KRT5

@@ -1,0 +1,45 @@
+cell_types:
+  Resident NK:
+    positive:
+      - CCL4
+      - CCL5
+      - CD2
+      - CD69
+      - CST7
+      - CTSW
+      - CXCR4
+      - DUSP2
+      - FGFBP2
+      - GNLY
+      - GZMA
+      - GZMB
+      - GZMH
+      - GZMM
+      - HOPX
+      - IL2RG
+      - IL32
+      - KLRD1
+      - NKG7
+      - S100A4
+  T cells:
+    positive:
+      - CCL5
+      - CCR7
+      - CD2
+      - CD247
+      - CD3D
+      - CD3E
+      - CD3G
+      - CD52
+      - CD69
+      - CD7
+      - CLEC2D
+      - CREM
+      - CXCR4
+      - IL32
+      - IL7R
+      - JUNB
+      - LCK
+      - LTB
+      - S100A4
+      - TNFAIP3

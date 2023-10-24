@@ -1,0 +1,46 @@
+cell_types:
+    smooth muscle cell:
+      positive:
+        - MYH11
+        - MYL9
+        - MYLK
+        - ACTA2
+        - SOD3
+        - LMOD1
+        - BGN
+        - PLN
+        - CNN1
+        - NOTCH3
+        - ACTG2
+        - MSRB3
+        - SNCG
+        - NEXN
+        - SMTN
+        - EHD2
+        - WFDC1
+        - RRAD
+        - GJA4
+        - AOC3
+    pericyte cell:
+      positive:
+        - PDGFRB
+        - HIGD1B
+        - NDUFA4L2
+        - MFGE8
+        - NOTCH3
+        - VIM
+        - COX4I2
+        - KCNJ8
+        - SERPING1
+        - ANGPT2
+        - MYO1B
+        - CSPG4
+        - ABCC9
+        - CD248
+        - ZIC1
+        - PDZD2
+        - COLEC11
+        - SLC38A11
+        - HEYL
+        - FOXC1
+  

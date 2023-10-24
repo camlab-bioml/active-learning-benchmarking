@@ -1,0 +1,18 @@
+cell_types:
+    IgD- IgMpos B cells:
+      positive:
+        - IgM
+        - B220
+      negative:
+        - IgD
+        - CD43
+        - 120g8
+  
+    IgM- IgD- B-cells:
+      positive:
+        - B220
+      negative: 
+        - IgM
+        - IgD
+        - CD43
+        - 120g8

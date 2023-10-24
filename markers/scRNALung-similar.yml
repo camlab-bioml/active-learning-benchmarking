@@ -1,0 +1,23 @@
+cell_types:
+    HCC827:
+      positive:
+        - RPL26
+        - SFTA2
+        - OS9
+        - SEC61G
+        - RPL7P9
+        - RPL7
+        - CDK4
+        - CDKN2A
+    
+    H1975:
+      positive:
+        - XAGE1B
+        - OCIAD2
+        - CDKN2A
+        - RPL26
+        - SNHG5
+      negative:
+        - LCN2
+        - PDZK1IP1
+        - SAA1
