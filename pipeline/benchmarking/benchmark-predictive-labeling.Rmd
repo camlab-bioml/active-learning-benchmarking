@@ -1,0 +1,133 @@
+---
+title: "Benchmark predictive labeling"
+output: html_document
+date: "2022-07-30"
+params:
+  acc: "../../output/v7/new/pred2/benchmark-predictive-labeling-snRNASeq.tsv"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../')
+suppressPackageStartupMessages({
+  library(readr)
+  library(dplyr)
+  library(tidyr)
+  library(yardstick)
+  library(ggplot2)
+  library(patchwork)
+})
+source("../../pipeline/whatsthatcell-helpers.R")
+```
+
+
+```{r fig.width = 9, fig.height = 5}
+acc <- read_tsv(params$acc) |> 
+  mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
+         selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
+         cell_selection = factor(cell_selection, levels = c("baseline", "top10", 
+                                                            "top50", "top100", 
+                                                            "top200")))
+
+cell_nums <- as.character(sort(unique(acc$cell_num)))
+acc$cell_num <- factor(acc$cell_num, levels = cell_nums)
+
+head(acc)
+
+lapply(unique(acc$method), function(x){
+  lapply(c("multinom", "rf"), function(pred_lab){
+    acc |> 
+      filter(method == x, (pred_lab_alg == pred_lab | is.na(pred_lab_alg))) |> 
+      ggplot(aes(x = as.character(cell_num), y = .estimate, fill = cell_selection)) +
+      geom_boxplot() +
+      ylim(0, 1) +
+      labs(x = "Cell number", title = paste0("Method: ", x, " - ", pred_lab), 
+           fill = "High confidence\ncell selection") +
+      facet_grid( ~ .metric) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+  })
+})
+```
+
+
+```{r fig.width=14, fig.height=8}
+baseline_acc <- acc |> 
+  select(-rand, -corrupted, -.estimator, -pred_lab_alg) |> 
+  filter(cell_selection == "baseline") |> 
+  unite("method", c(method, knn, res, cell_num, initial, seed, selection_procedure, .metric, AL_alg), sep = ",")
+
+pred_lab_acc <- acc |> 
+  select(-rand, -corrupted, -.estimator) |> 
+  filter(cell_selection != "baseline") |> 
+  unite("method", c(method, knn, res, cell_num, initial, seed, selection_procedure, .metric, AL_alg), sep = ',') |> 
+  pivot_wider(names_from = pred_lab_alg, values_from = .estimate)
+
+acc_gap <- left_join(pred_lab_acc, 
+          select(baseline_acc, -cell_selection), 
+          by = "method",
+          suffix = c("_pred_lab", "_baseline")) |> 
+  mutate(rf_gap = rf - .estimate,
+         lr_gap = multinom - .estimate) |> 
+  separate(method, c("method", "knn", "res", "cell_num", "initial", "seed", "selection_procedure", ".metric", "AL_alg"), sep = ",")
+  
+# 10k foot view
+lapply(unique(acc$method), function(x){
+    acc_gap |> 
+      filter(method == x) |> 
+      ggplot(aes(x = cell_selection, y = rf_gap, fill = selection_procedure)) +
+      geom_boxplot() +
+      facet_grid(cell_num ~ .metric) +
+      labs(title = x) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+            legend.position = "bottom")
+}) 
+
+lapply(unique(acc$method), function(x){
+    acc_gap |> 
+      filter(method == x) |> 
+      ggplot(aes(x = cell_selection, y = lr_gap, fill = selection_procedure)) +
+      geom_boxplot() +
+      facet_grid(cell_num ~ .metric) +
+      labs(title = x) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+            legend.position = "bottom")
+})
+
+
+lapply(unique(acc_gap$method), function(m){
+  lapply(c('random', 'ranking'), function(init){
+    acc_gap |> 
+      filter(method == m) |>
+      filter(initial == init | is.na(initial) | initial == "NA") |> 
+      ggplot(aes(x = cell_selection, y = rf_gap, fill = selection_procedure)) +
+      geom_hline(yintercept = 0) +
+      geom_boxplot() +
+      labs(title = paste0("Method: ", m, " pred lab alg: rf",
+                          " Initial: ", init)) +
+      facet_grid(cell_num ~.metric) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+            legend.position = "bottom")
+  })
+})
+
+lapply(unique(acc_gap$method), function(m){
+  lapply(c('random', 'ranking'), function(init){
+    acc_gap |> 
+      filter(method == m) |>
+      filter(initial == init | is.na(initial) | initial == "NA") |> 
+      ggplot(aes(x = cell_selection, y = lr_gap, fill = selection_procedure)) +
+      geom_hline(yintercept = 0) +
+      geom_boxplot() +
+      labs(title = paste0("Method: ", m, " pred lab alg: lr",
+                          " Initial: ", init)) +
+      facet_grid(cell_num ~.metric) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+            legend.position = "bottom")
+  })
+})
+```

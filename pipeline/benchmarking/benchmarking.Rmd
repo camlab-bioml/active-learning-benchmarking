@@ -1,0 +1,221 @@
+---
+title: "Benchmarking"
+output: html_document
+params:
+  acc: "../../output/v6/results/overall-CyTOF-benchmarking-accuracies.tsv"
+  al_alg: "rf"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../')
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(yardstick)
+})
+source("../../pipeline/whatsthatcell-helpers.R")
+```
+
+
+```{r message=F}
+### [ LOAD GROUND TRUTH ] #####
+acc <- read_tsv(params$acc) |>
+  filter(AL_alg == params$al_alg | is.na(AL_alg) | AL_alg == "NA")
+```
+
+
+```{r fig.width=12}
+selection_order <- acc %>% 
+  filter(rand == 0 | rand == "NA" | is.na(rand)) %>% 
+  filter(corrupted == 0) %>% 
+  group_by(selection_procedure) %>% 
+  summarise(mean_accuracy = mean(na.omit(.estimate))) %>% 
+  arrange(mean_accuracy) %>% 
+  pull(selection_procedure)
+
+acc %>% 
+  filter(rand == 0 | rand == "NA" | is.na(rand)) %>% 
+  filter(corrupted == 0) %>% 
+  mutate(selection_procedure = factor(selection_procedure, levels = selection_order)) %>% 
+  ggplot(aes(x = selection_procedure, y = .estimate, fill = initial)) +
+  geom_boxplot() +
+  ylim(0, 1) +
+  labs(x = "Selection proceduce") +
+  facet_grid(method + cell_num ~ .metric) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+```{r}
+acc %>% 
+  filter(rand == 0 | rand == "NA" | is.na(rand)) %>% 
+  filter(corrupted == 0) %>% 
+  filter(initial == "random" | is.na(initial)) |> 
+  mutate(selection_procedure = factor(selection_procedure, levels = selection_order)) |>
+  group_by(cell_num, selection_procedure, method, .metric) |> 
+  summarise(mean_estimate = mean(na.omit(.estimate))) |> 
+  ungroup() |> 
+  ggplot(aes(x = as.character(cell_num), y = mean_estimate, 
+             color = selection_procedure, group = selection_procedure,
+             shape = selection_procedure)) +
+  geom_point() +
+  ylim(0, 1) +
+  geom_line() +
+  facet_grid(method ~ .metric) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+acc %>% 
+  filter(rand == 0 | rand == "NA" | is.na(rand)) %>% 
+  filter(corrupted == 0) %>% 
+  filter(initial == "ranking" | is.na(initial)) |> 
+  mutate(selection_procedure = factor(selection_procedure, levels = selection_order)) |>
+  group_by(cell_num, selection_procedure, method, .metric, initial) |> 
+  summarise(mean_estimate = mean(na.omit(.estimate))) |> 
+  ungroup() |> 
+  ggplot(aes(x = as.character(cell_num), y = mean_estimate, 
+             color = selection_procedure, group = selection_procedure,
+             shape = selection_procedure)) +
+  geom_point() +
+  ylim(0, 1) +
+  geom_line() +
+  facet_grid(method ~ .metric) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+
+### First random
+```{r}
+lapply(unique(acc$method), function(x){
+  acc %>% 
+    filter(rand == 0 & 
+             selection_procedure != "Seurat_clustering" & 
+             selection_procedure != "random") %>% 
+    filter(method == x) %>% 
+    filter(initial == "random") |> 
+    group_by(corrupted, cell_num, .metric, method, selection_procedure) |> 
+    summarize(mean_estimate = mean(.estimate)) |> 
+    ungroup() |> 
+    ggplot(aes(x = as.character(corrupted), y = mean_estimate, 
+               color = selection_procedure, group = selection_procedure,
+               shape = selection_procedure)) + 
+    geom_point() +
+    geom_line() +
+    ylim(0, 1) +
+    facet_grid(cell_num ~ .metric) + 
+    theme_bw() + 
+    labs(title = x, color = "Selection procedure", shape = "Selection procedure", x = "Corrupted") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+})
+```
+
+### Now ranked
+```{r}
+lapply(unique(acc$method), function(x){
+  acc %>% 
+    filter(rand == 0 & 
+             selection_procedure != "Seurat_clustering" & 
+             selection_procedure != "random") %>% 
+    filter(method == x) %>% 
+    filter(initial == "ranking") |> 
+    group_by(corrupted, cell_num, .metric, method, selection_procedure) |> 
+    summarize(mean_estimate = mean(.estimate)) |> 
+    ungroup() |> 
+    ggplot(aes(x = as.character(corrupted), y = mean_estimate, 
+               color = selection_procedure, group = selection_procedure,
+               shape = selection_procedure)) + 
+    geom_point() +
+    geom_line() +
+    ylim(0, 1) +
+    facet_grid(cell_num ~ .metric) + 
+    theme_bw() + 
+    labs(title = x, color = "Selection procedure", shape = "Selection procedure", x = "Corrupted") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+})
+```
+
+### First random
+```{r}
+lapply(unique(acc$method), function(x){
+  acc %>% 
+    filter(corrupted == 0 & 
+             selection_procedure != "random" & 
+             selection_procedure != "Seurat_clustering") %>% 
+    filter(method == x) %>% 
+    filter(initial == "random") |> 
+    group_by(rand, cell_num, .metric, method, selection_procedure) |> 
+    summarize(mean_estimate = mean(.estimate)) |> 
+    ungroup() |> 
+    ggplot(aes(x = as.character(rand), y = mean_estimate, color = selection_procedure, 
+               group = selection_procedure, group = selection_procedure,
+               shape = selection_procedure)) +
+    geom_point() + 
+    geom_line() +
+    ylim(0, 1) +
+    facet_grid(cell_num ~ .metric) + 
+    theme_bw() + 
+    labs(title = x, color = "Selection procedure", shape = "Selection procedure", x = "Random") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+})
+```
+
+
+
+### Now ranked
+```{r}
+lapply(unique(acc$method), function(x){
+  acc %>% 
+    filter(corrupted == 0 & 
+             selection_procedure != "random" & 
+             selection_procedure != "Seurat_clustering") %>% 
+    filter(method == x) %>% 
+    filter(initial == "ranking") |> 
+    group_by(rand, cell_num, .metric, method, selection_procedure) |> 
+    summarize(mean_estimate = mean(.estimate)) |> 
+    ungroup() |> 
+    ggplot(aes(x = as.character(rand), y = mean_estimate, color = selection_procedure, 
+               group = selection_procedure, group = selection_procedure,
+               shape = selection_procedure)) +
+    geom_point() + 
+    geom_line() +
+    ylim(0, 1) +
+    facet_grid(cell_num ~ .metric) + 
+    theme_bw() + 
+    labs(title = x, color = "Selection procedure", shape = "Selection procedure", x = "Random") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+})
+```
+
+```{r eval = F}
+cell_type_accuracies <- function(predictions, cell_type){
+  res <- predictions %>% 
+    filter(annotated_cell_type == cell_type) %>% 
+    filter(predicted_cell_type != "unassigned") %>% 
+    #group_by(method, selection_procedure, prediction_params) %>% 
+    group_by(method, set, knn, res, cell_num, rand, corrupted, selection_procedure) %>% 
+    acc_wrap()
+  
+  res %>% 
+    ggplot(aes(x = selection_procedure, y = .estimate)) +
+    geom_point() +
+    labs(title = cell_type) +
+    facet_grid(method ~ .metric) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90))
+}
+
+
+lapply(unique(predictions$annotated_cell_type), function(x){
+  cell_type_accuracies(predictions, x)
+})
+
+
+lapply(unique(predictions$method), function(x){
+  a <- predictions %>% 
+    filter(selection_procedure == "Active-Learning" & method == x)
+  
+  table(a$predicted_cell_type, a$annotated_cell_type)
+})
+```
+
