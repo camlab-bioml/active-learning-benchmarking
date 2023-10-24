@@ -1,0 +1,172 @@
+---
+title: "imbalance evaluation"
+output: html_document
+date: "2022-11-21"
+params:
+  sc_acc: ""
+  sn_acc: ""
+  cy_acc: ""
+  lung_acc: ""
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../')
+suppressPackageStartupMessages({
+  library(tidyverse)
+})
+```
+
+
+```{r message=FALSE}
+sc_acc <- read_tsv(params$sc_acc)
+sn_acc <- read_tsv(params$sn_acc)
+cy_acc <- read_tsv(params$cy_acc)
+sc_lung <- read_tsv(params$lung_acc)
+
+plot_imbalance <- function(df, sel_al, init_sel, metric){
+  title <- paste0("AL: ", sel_al, ", initial selection: ", init_sel, ", metric: ", metric)
+  df |> 
+    filter(.metric == metric) |> 
+    mutate(similarity = factor(similarity,
+                               levels = c("balanced-different", "imbalanced-different",
+                                          "balanced-similar", "imbalanced-similar"))) |> 
+    filter(al == sel_al | is.na(al)) |> 
+    filter(init == init_sel | is.na(init)) |> 
+    ggplot(aes(x = strat, y = .estimate, fill = similarity)) +
+    geom_boxplot() +
+    labs(title = title) +
+    facet_grid(modality ~ method) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+          legend.position = "bottom")
+}
+
+imbalance_acc_increase <- function(df, sel_al, init_sel, mod, metric){
+  title <- paste0("Modality: ", mod, ", AL: ", sel_al, ", initial selection: ", init_sel, ", metric: ", metric)
+  
+  plot_df <- df |> 
+    pivot_wider(names_from = "similarity", values_from = ".estimate") |> 
+    mutate(similar = (`imbalanced-similar` - `balanced-similar`) / `balanced-similar`,
+           different =  (`imbalanced-different` - `balanced-different`) / `balanced-different`) |> 
+    filter(!is.na(similar)) |> 
+    filter(!is.na(different)) |> 
+    pivot_longer(c(similar, different), names_to = "comp", values_to = "diff")
+
+  p1 <- plot_df |> 
+    ggplot(aes(x = comp, y = diff, fill = strat)) +
+    geom_boxplot() +
+    geom_hline(yintercept = 0) +
+    labs(title = title, 
+      y = "Change in accuracy\n(imbalanced - balanced) / balanced") +
+    facet_wrap( ~ method, nrows =1, scales="free_y") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+  
+  p1
+}
+```
+
+
+
+# Basic accuracy
+```{r fig.width=10, fig.height=6}
+accs_list <- list("scRNASeq" = sc_acc, "snRNASeq" = sn_acc, 
+                  "CyTOF" = cy_acc, "scRNASeq_lung" = sc_lung)
+
+lapply(names(accs_list), function(cohort){
+  print(cohort)
+
+  df <- accs_list[[cohort]]
+  lapply(c("rf", "multinom"), function(al){
+    lapply(c("random", "ranking"), function(init){
+      lapply(unique(df$.metric), function(metric){
+        plot_imbalance(df, al, init, metric)
+      })
+    })
+  })
+
+  lapply(c("rf", "multinom"), function(al){
+    lapply(c("random", "ranking"), function(init){
+      lapply(unique(df$.metric), function(metric){
+        plot_imbalance(df, al, init, metric)
+      })
+    })
+  })
+
+  lapply(c("rf", "multinom"), function(al){
+    lapply(c("random", "ranking"), function(init){
+      lapply(unique(df$.metric), function(metric){
+        plot_imbalance(df, al, init, metric)
+      })
+    })
+  })
+})
+```
+
+
+
+# Increase in accuracy
+```{r fig.width=10, fig.height=7}
+for(sel_al in c("rf", "multinom")){
+  for(sel_init in c("random", "ranking")){
+    for(metric in unique(sc_acc$.metric)){
+      df <- sc_acc |> 
+      dplyr::filter(al == sel_al | is.na(al)) |> 
+      dplyr::filter(init == sel_init | is.na(init)) |> 
+      dplyr::filter(.metric == metric)
+    
+      p <- imbalance_acc_increase(df, sel_al, sel_init, "scRNASeq", metric)
+      print(p)
+    }
+  }
+}
+
+
+for(sel_al in c("rf", "multinom")){
+  for(sel_init in c("random", "ranking")){
+    for(metric in unique(sn_acc$.metric)){
+      print(sel_al)
+      print(sel_init)
+      df <- sn_acc |>
+        dplyr::filter(al == sel_al | is.na(al)) |>
+        dplyr::filter(init == sel_init | is.na(init)) |>
+        dplyr::filter(.metric == metric)
+
+      p <- imbalance_acc_increase(df, sel_al, sel_init, "snRNASeq", metric)
+      print(p)
+    }
+  }
+}
+
+for(sel_al in c("rf", "multinom")){
+  for(sel_init in c("random", "ranking")){
+    for(metric in unique(cy_acc$.metric)){
+      df <- cy_acc |> 
+        dplyr::filter(al == sel_al | is.na(al)) |> 
+        dplyr::filter(init == sel_init | is.na(init)) |> 
+        dplyr::filter(.metric == "bal_accuracy")
+      
+      p <- imbalance_acc_increase(df, sel_al, sel_init, "CyTOF", metric)
+      print(p)
+    }
+  }
+}
+
+
+for(sel_al in c("rf", "multinom")){
+  for(sel_init in c("random", "ranking")){
+    for(metric in unique(sc_lung$.metric)){
+      df <- sc_lung |> 
+        dplyr::filter(al == sel_al | is.na(al)) |> 
+        dplyr::filter(init == sel_init | is.na(init)) |> 
+        dplyr::filter(.metric == "bal_accuracy")
+      
+      p <- imbalance_acc_increase(df, sel_al, sel_init, "CyTOF", metric)
+      print(p)
+    }
+  }
+}
+```
+
+
