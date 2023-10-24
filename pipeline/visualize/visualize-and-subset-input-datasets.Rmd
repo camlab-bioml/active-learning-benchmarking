@@ -1,0 +1,170 @@
+---
+title: "visualize-input-datasets"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(SingleCellExperiment)
+library(scater)
+library(Seurat)
+```
+
+
+# CyTOF
+
+```{r}
+full <- readRDS('../../data/CyTOF/CyTOF-full.rds')
+full <- runTSNE(full)
+plotTSNE(full, colour_by = "cell_type", text_by = "cell_type")
+full$cell_type %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+
+train <- readRDS("../../data/CyTOF/CyTOF-train.rds")
+train <- runTSNE(train)
+plotTSNE(train, colour_by = "cell_type", text_by = "cell_type")
+train$cell_type %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+
+test <- readRDS('../../data/CyTOF/CyTOF-test.rds')
+test <- runTSNE(test)
+plotTSNE(test, colour_by = "cell_type", text_by = "cell_type")
+test$cell_type %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+```
+
+### Training data clustering
+
+```{r}
+### Seurat
+seu <- CreateSeuratObject(counts = assays(train)$logcounts)
+
+seu <- FindVariableFeatures(seu, selection.method = 'vst', nfeatures = 2000)
+
+all.genes <- rownames(seu)
+seu <- ScaleData(seu, features = all.genes)
+
+seu <- RunPCA(seu, features = VariableFeatures(object = seu))
+
+### [CLUSTERING] ###
+seu <- FindNeighbors(seu, dims = 1:15)
+seu <- FindClusters(seu, resolution  = 0.8)
+
+seu_clusters <- table(train$cell_type, Idents(seu) %>% as.vector())
+
+heatmap(seu_clusters)
+
+## Heatmap
+seu_clusters %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = Var1, y = Var2)) +
+  geom_tile(aes(fill = Freq)) +
+  geom_text(aes(label = Freq)) +
+  scale_fill_gradient(low = "white", high = "red") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+
+
+# scRNA-Seq
+
+```{r}
+full <- readRDS("../../data/scRNASeq/scRNASeq-full.rds")
+full <- runTSNE(full)
+plotTSNE(full, colour_by = "CellType", text_by = "CellType")
+full$CellType %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+
+
+train <- readRDS("../../data/scRNASeq/scRNASeq-train.rds")
+train <- runTSNE(train)
+plotTSNE(train, colour_by = "CellType", text_by = "CellType")
+train$CellType %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+
+
+test <- readRDS("../../data/scRNASeq/scRNASeq-test.rds")
+test <- runTSNE(test)
+plotTSNE(test, colour_by = "CellType", text_by = "CellType")
+test$CellType %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+```
+
+
+### After removal of distinct cell types
+
+# removing megakaryocytes
+
+```{r}
+full <- full[,full$CellType != "Megakaryocyte"]
+train <- train[,train$CellType != "Megakaryocyte"]
+test <- test[,test$CellType != "Megakaryocyte"]
+
+full <- runTSNE(full)
+plotTSNE(full, colour_by = "CellType", text_by = "CellType")
+full$CellType %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+
+train <- runTSNE(train)
+plotTSNE(train, colour_by = "CellType", text_by = "CellType")
+train$CellType %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+
+test <- runTSNE(test)
+plotTSNE(test, colour_by = "CellType", text_by = "CellType")
+test$CellType %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+```
+
+
+
+### Training data clustering
+
+```{r}
+### Seurat
+seu <- CreateSeuratObject(counts = assays(train)$logcounts)
+
+seu <- FindVariableFeatures(seu, selection.method = 'vst', nfeatures = 2000)
+
+all.genes <- rownames(seu)
+seu <- ScaleData(seu, features = all.genes)
+
+seu <- RunPCA(seu, features = VariableFeatures(object = seu))
+
+### [CLUSTERING] ###
+seu <- FindNeighbors(seu, dims = 1:15)
+seu <- FindClusters(seu, resolution  = 0.8)
+
+seu_clusters <- table(train$CellType, Idents(seu) %>% as.vector())
+
+heatmap(seu_clusters)
+
+## Heatmap
+seu_clusters %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = Var1, y = Var2)) +
+  geom_tile(aes(fill = Freq)) +
+  geom_text(aes(label = Freq)) +
+  scale_fill_gradient(low = "white", high = "red") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+

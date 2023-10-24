@@ -1,0 +1,181 @@
+---
+title: "Compare ground truth to predicted"
+output: html_document
+params:
+  sce: "../../data/CyTOF/CyTOF-test.rds"
+  input_dir: "../../output/v3/rare-subtype-benchmarking/"
+  AL_pattern_entropy: "CyTOF-Active-Learning"
+  AL_pattern_maxp: ""
+  seurat_pattern: "CyTOF-Seurat"
+  random_pattern: "CyTOF-random"
+  modality: ""
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../')
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(ggalluvial)
+})
+source("../../pipeline/whatsthatcell-helpers.R")
+```
+
+
+```{r message=F, warning =F}
+### [ LOAD GROUND TRUTH ] #####
+sce <- readRDS(params$sce)
+gt <- tibble(cell_id = colnames(sce),
+             ground_truth = sce$CellType)
+
+###  [ LOAD PREDICTIONS ] #####
+AL_files_entropy <- list.files(params$input_dir, 
+                               pattern = glob2rx(params$AL_pattern_entropy),
+                               full.names = TRUE)
+AL_files_maxp <- list.files(params$input_dir, 
+                            pattern = glob2rx(params$AL_pattern_maxp),
+                            full.names = TRUE)
+Seurat_files <- list.files(params$input_dir,
+                           pattern = glob2rx(params$seurat_pattern),
+                           full.names = TRUE)
+random_files <- list.files(params$input_dir,
+                           pattern = glob2rx(params$random_pattern),
+                           full.names = TRUE)
+
+AL_entropy <- lapply(AL_files_entropy, function(x){
+  df <- read_tsv(x) %>% 
+    separate(prediction_params, c('m1', 'm2', 'rm_it', 'rm_na', 'rm_knn', 'rm_na2',
+                                'rm_res', 'rm_na3', 'rm_cell', 'cell_num', 'rm_sel',
+                                'random', 'rm_cor', 'corrupted'), sep = '-') %>% 
+    mutate(selection_procedure = gsub('Active-Learning_entropy-strategy-', '', selection_procedure)) %>% 
+    separate(selection_procedure, c('selection_procedure', 'rm_al', 'al'), sep = '-') |>
+    select(-starts_with('rm')) %>% 
+    unite('method', c(m1, m2), sep = '-')
+  }) %>% bind_rows()
+
+AL_maxp <- lapply(AL_files_maxp, function(x){
+  df <- read_tsv(x) %>% 
+    separate(prediction_params, c('m1', 'm2', 'rm_it', 'rm_na', 'rm_knn', 'rm_na2',
+                                'rm_res', 'rm_na3', 'rm_cell', 'cell_num', 'rm_sel',
+                                'random', 'rm_cor', 'corrupted'), sep = '-') %>% 
+    mutate(selection_procedure = gsub('Active-Learning_maxp-strategy-', '', selection_procedure)) %>% 
+    separate(selection_procedure, c('selection_procedure', 'rm_al', 'al'), sep = '-') |>
+    select(-starts_with('rm')) %>% 
+    unite('method', c(m1, m2), sep = '-')
+  }) %>% bind_rows()
+
+AL <- bind_rows(AL_entropy, AL_maxp)
+
+Seurat <- lapply(Seurat_files, function(x){
+  df <- read_tsv(x) %>% 
+  separate(prediction_params, c('m1', 'm2', 'rm_it', 'rm_na', 'rm_knn', 'knn',
+                                'rm_res', 'res', 'rm_cell', 'cell_num', 'rm_sel',
+                                'rm_na2', 'rm_cor', 'corrupted'), sep = '-') %>% 
+  separate(selection_procedure, c('s1', 's2', 'rm_strat', 'rm_strat_na', 'rm_al', 'al')) |>
+  select(-starts_with('rm')) %>% 
+  unite('selection_procedure', c(s1, s2), sep = '-') |>
+  unite('method', c(m1, m2), sep = '-')
+  }) %>% bind_rows()
+
+random <- lapply(random_files, function(x){
+  df <- read_tsv(x) %>% 
+  separate(prediction_params, c('m1', 'm2', 'rm_it', 'set', 'rm_knn', 'rm_na2',
+                                'rm_res', 'rm_na3', 'rm_cell', 'cell_num', 'rm_sel',
+                                'rm_na', 'rm_cor', 'corrupted'), sep = '-') %>% 
+  separate(selection_procedure, c('selection_procedure', 'rm_strat', 'rm_strat_na', 'rm_al', 'al')) |>
+  select(-starts_with('rm')) %>% 
+  unite('method', c(m1, m2), sep = '-')
+  }) %>% bind_rows()
+
+
+predictions <- bind_rows(AL, Seurat, random) %>% 
+  left_join(gt)
+predictions$cell_num <- factor(predictions$cell_num, levels = c("50", "100", "250", "500"))
+```
+
+
+```{r fig.height = 25, fig.width=18}
+selections <- unique(AL$selection_procedure)
+
+# First logistic regression
+for(i in selections){
+  for(j in unique(predictions$method)){
+    df <- predictions %>% 
+      filter(selection_procedure == i & method == j & al == 'multinom')
+    
+    gg <- df %>%
+      pivot_longer(c(predicted_cell_type, ground_truth), names_to = 'predicted_or_gt', values_to = 'cell_type') %>% 
+      ggplot(aes(x = predicted_or_gt, stratum = cell_type, fill = cell_type, alluvium = cell_id)) +
+      geom_stratum() +
+      geom_flow() +
+      scale_fill_manual(values = cell_type_colours(params$modality)) +
+      whatsthatcell_theme() +
+      facet_grid(random + corrupted ~ cell_num) +
+      labs(x = "", y = "cell", title = paste0(i, " - ", j)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+    
+   print(gg)
+  }
+}
+
+## Random forest
+for(i in selections){
+  for(j in unique(predictions$method)){
+    df <- predictions %>% 
+      filter(selection_procedure == i & method == j & al == 'rf')
+    
+    gg <- df %>%
+      pivot_longer(c(predicted_cell_type, ground_truth), names_to = 'predicted_or_gt', values_to = 'cell_type') %>% 
+      ggplot(aes(x = predicted_or_gt, stratum = cell_type, fill = cell_type, alluvium = cell_id)) +
+      geom_stratum() +
+      geom_flow() +
+      scale_fill_manual(values = cell_type_colours(params$modality)) +
+      whatsthatcell_theme() +
+      facet_grid(random + corrupted ~ cell_num) +
+      labs(x = "", y = "cell", title = paste0(i, " - ", j)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+    
+   print(gg)
+  }
+}
+```
+
+
+```{r fig.width=14, fig.height=16}
+for(i in unique(predictions$method)){
+  gg <- predictions %>% 
+    filter(selection_procedure == 'random' & method == i) %>% 
+    pivot_longer(c(predicted_cell_type, ground_truth), names_to = 'predicted_or_gt', values_to = 'cell_type') %>% 
+    ggplot(aes(x = predicted_or_gt, stratum = cell_type, fill = cell_type, alluvium = cell_id)) +
+    geom_stratum() +
+    geom_flow() +
+    scale_fill_manual(values = cell_type_colours(params$modality)) +
+    whatsthatcell_theme() +
+    facet_grid(set ~ cell_num) +
+    labs(x = "", y = "cell", title = paste0("Random - ", i)) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+  print(gg)
+}
+```
+
+
+```{r fig.height=45, fig.width=16}
+for(i in unique(predictions$method)){
+  gg <- predictions %>% 
+    filter(selection_procedure == 'Seurat-clustering' & method == i) %>% 
+    pivot_longer(c(predicted_cell_type, ground_truth), names_to = 'predicted_or_gt', values_to = 'cell_type') %>% 
+    ggplot(aes(x = predicted_or_gt, stratum = cell_type, fill = cell_type, alluvium = cell_id)) +
+    geom_stratum() +
+    geom_flow() +
+    scale_fill_manual(values = cell_type_colours(params$modality)) +
+    whatsthatcell_theme() + 
+    facet_grid(knn + res ~ cell_num) +
+    labs(x = "", y = "cell", title = paste0("Seurat-clustering ", i)) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+  print(gg)
+}
+```
+
+

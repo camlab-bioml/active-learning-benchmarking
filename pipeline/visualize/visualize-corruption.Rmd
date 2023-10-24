@@ -1,0 +1,98 @@
+---
+title: "Visualize corruption"
+output: html_document
+params:
+  AL_entropy_path: "../../data/CyTOF/Active-Learning/AL-batches-subset"
+  AL_maxp_path: ""
+  pattern: ""
+  sce: "../../data/CyTOF/CyTOF-train.rds"
+  modality: ""
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '../../')
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(ggalluvial)
+})
+source("../../pipeline/whatsthatcell-helpers.R")
+```
+
+
+```{r message = FALSE}
+AL_files_entropy <- list.files(params$AL_entropy_path, full.names = TRUE, pattern = glob2rx(params$pattern))
+AL_entropy <- lapply(AL_files_entropy, function(x){
+  df <- read_tsv(x)
+  df$seed <- as.vector(str_match(x, "seed-[0-9]"))
+  df
+}) %>% 
+  bind_rows() %>% 
+  mutate(method = gsub("Active-Learning-groundTruth-random-strategy-|Active-Learning-groundTruth-ranking-strategy-", "", method),
+         method = gsub("seed-[0-9]", "", method)) %>% 
+  separate(method, into = c('strategy', 'al', 'AL_alg', 'r', 'random', 'c', 'corrupted'), sep = '-') %>% 
+  select(-c(al, r, c))
+
+AL_files_maxp <- list.files(params$AL_maxp_path, full.names = TRUE, pattern = glob2rx(params$pattern))
+AL_maxp <- lapply(AL_files_maxp, function(x){
+  df <- read_tsv(x)
+  df$seed <- as.vector(str_match(x, "seed-[0-9]"))
+  df
+}) %>% 
+  bind_rows() %>% 
+  mutate(method = gsub("Active-Learning-groundTruth-random-strategy-|Active-Learning-groundTruth-ranking-strategy-", "", method),
+         method = gsub("seed-[0-9]", "", method)) %>% 
+  separate(method, into = c('strategy', 'al', 'AL_alg', 'r', 'random', 'c', 'corrupted'), sep = '-') %>% 
+  select(-c(al, r, c))
+```
+
+## Entropy
+### RF
+```{r fig.width=10, fig.height=12}
+AL_alluvial <- function(AL, modality){
+  AL %>% 
+    pivot_longer(c(cell_type, corrupted_cell_type), names_to = "gt_or_mutated", values_to = "cell_type") %>% 
+    ggplot(aes(x = gt_or_mutated, stratum = cell_type, fill = cell_type, alluvium = cell_id)) +
+    geom_stratum() +
+    geom_flow() +
+    scale_fill_manual(values = cell_type_colours(modality)) +
+    whatsthatcell_theme() +
+    facet_grid(strategy ~ corrupted, scales = "free_y") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+}
+
+lapply(unique(AL_entropy$cell_num), function(x){
+  df <- AL_entropy %>% 
+    filter(AL_alg == 'rf', cell_num == x)
+  AL_alluvial(df, params$modality)
+})
+```
+
+### LR
+```{r fig.width=10, fig.height=12}
+lapply(unique(AL_entropy$cell_num), function(x){
+  df <- AL_entropy %>% 
+    filter(AL_alg == 'multinom', cell_num == x)
+  AL_alluvial(df, params$modality)
+})
+```
+
+## Maxp
+### RF
+```{r fig.width=10, fig.height=12}
+lapply(unique(AL_maxp$cell_num), function(x){
+  df <- AL_maxp %>% 
+    filter(AL_alg == 'rf', cell_num == x)
+  AL_alluvial(df, params$modality)
+})
+```
+
+### LR
+```{r fig.width=10, fig.height=12}
+lapply(unique(AL_maxp$cell_num), function(x){
+  df <- AL_maxp %>% 
+    filter(AL_alg == 'multinom', cell_num == x)
+  AL_alluvial(df, params$modality)
+})
+```
+
