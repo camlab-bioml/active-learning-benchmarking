@@ -7,12 +7,13 @@ suppressPackageStartupMessages({
 source("pipeline/whatsthatcell-helpers.R")
 
 ### PREDICTIVE LABELLING ACCURACY
-pred_lab_acc <- read_tsv(snakemake@input$acc)
+pred_lab_acc <- read_tsv("output/v8/new/pred-labeling-accuracy.tsv")#snakemake@input$acc)
 
 # SUPPLEMENTAL FILE
-pdf(snakemake@output$supp, height = 10, width = 12)
+pdf(snakemake@output$supp1, height = 14, width = 10)
   pred_lab_acc |> 
     filter(.metric == "f_meas") |> 
+    filter(mod == "scRNASeq" | mod == "scRNALung" | mod == "CyTOF") |> 
     mutate(pred_sel = gsub("top", "", pred_sel),
            pred_sel = paste0(pred_sel, "%")) |> 
     mutate(pred_sel = factor(pred_sel, c("10%", "50%", "100%"))) |> 
@@ -22,66 +23,111 @@ pdf(snakemake@output$supp, height = 10, width = 12)
                                            selection_procedure == "NoMarkerSeurat-clustering" ~ "AR No Marker",
                                            selection_procedure == "Active-Learning_entropy" ~ "AL Highest entropy",
                                            selection_procedure == "Active-Learning_maxp" ~ "AL Lowest maxp",
-                                           selection_procedure == "random" ~ "Random")) |> 
+                                           selection_procedure == "random" ~ "Random"),
+           mod = case_when(mod == "tabulaVasc" ~ "scRNASeq\nVasculature",
+                           mod == "snRNASeq" ~ "snRNASeq\nPancreas cancer",
+                           mod == "scRNASeq" ~ "scRNASeq\nBreast cancer cell lines",
+                           mod == "scRNALung" ~ "scRNASeq\nLung cancer cell lines",
+                           mod == "liverAtlas" ~ "scRNASeq\nLiver",
+                           mod == "CyTOF" ~ "CyTOF\nBone marrow")) |> 
     ggplot(aes(x = pred_sel, y = .estimate, fill = pred)) +
     geom_boxplot() +
     labs(x = "Percentage of most confidently labelled cells selected", 
          fill = "Self-\ntraining\nalgorithm", y = "F-1 score") +
     scale_fill_manual(values = al_colours()) +
-    facet_grid(selection_procedure~mod+cell_num) +
+    facet_grid(mod+cell_num~selection_procedure) +
     whatsthatcell_theme() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 dev.off()
 
-# PANEL A, MAIN FIGURE
+pdf(snakemake@output$supp2, height = 14, width = 10)
+  pred_lab_acc |> 
+    filter(.metric == "f_meas") |> 
+    filter(mod == "snRNASeq" | mod == "liverAtlas" | mod == "tabulaVasc") |> 
+    mutate(pred_sel = gsub("top", "", pred_sel),
+           pred_sel = paste0(pred_sel, "%")) |> 
+    mutate(pred_sel = factor(pred_sel, c("10%", "50%", "100%"))) |> 
+    mutate(pred = case_when(pred == "multinom" ~ "LR",
+                            pred == "rf" ~ "RF"),
+           selection_procedure = case_when(selection_procedure == "MarkerSeurat-clustering" ~ "AR Marker",
+                                           selection_procedure == "NoMarkerSeurat-clustering" ~ "AR No Marker",
+                                           selection_procedure == "Active-Learning_entropy" ~ "AL Highest entropy",
+                                           selection_procedure == "Active-Learning_maxp" ~ "AL Lowest maxp",
+                                           selection_procedure == "random" ~ "Random"),
+           mod = case_when(mod == "tabulaVasc" ~ "scRNASeq\nVasculature",
+                           mod == "snRNASeq" ~ "snRNASeq\nPancreas cancer",
+                           mod == "scRNASeq" ~ "scRNASeq\nBreast cancer cell lines",
+                           mod == "scRNALung" ~ "scRNASeq\nLung cancer cell lines",
+                           mod == "liverAtlas" ~ "scRNASeq\nLiver",
+                           mod == "CyTOF" ~ "CyTOF\nBone marrow")) |> 
+    ggplot(aes(x = pred_sel, y = .estimate, fill = pred)) +
+    geom_boxplot() +
+    labs(x = "Percentage of most confidently labelled cells selected", 
+         fill = "Self-\ntraining\nalgorithm", y = "F-1 score") +
+    scale_fill_manual(values = al_colours()) +
+    facet_grid(mod+cell_num~selection_procedure) +
+    whatsthatcell_theme() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+dev.off()
+
+# PANEL A, SUPPLEMENTAL
 pred_lab_acc_pub <- pred_lab_acc |> 
-  filter(.metric == "f_meas" & selection_procedure == "MarkerSeurat-clustering") |> 
+  filter(.metric == "f_meas" & strat == "highest_entropy" &
+           initial == "ranking" & al == "rf") |> 
   mutate(pred_sel = gsub("top", "", pred_sel),
          pred_sel = paste0(pred_sel, "%")) |> 
   mutate(pred_sel = factor(pred_sel, c("10%", "50%", "100%"))) |> 
   mutate(pred = case_when(pred == "multinom" ~ "LR",
                           pred == "rf" ~ "RF"))
-  
-plot_pred_lab_acc <- function(acc, cohort, x_lab = FALSE){
-  if(x_lab){
-    x_lab <- "Percentage of most confidently\nlabelled cells selected"
-  }else{
-    x_lab <- ""
-  }
-  
-  filter(acc, mod == cohort) |> 
-    ggplot(aes(x = pred_sel, y = .estimate, fill = pred)) +
-    geom_boxplot() +
-    labs(x = x_lab, fill = "Self-\ntraining\nalgorithm",
-         title = cohort, y = "F1-score") +
-    scale_fill_manual(values = al_colours()) +
-    facet_wrap(~cell_num, nrow = 1) +
-    whatsthatcell_theme() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-}
 
-pred_lab_acc_plot <- plot_pred_lab_acc(pred_lab_acc_pub, "CyTOF") |
-  plot_pred_lab_acc(pred_lab_acc_pub, "scRNASeq", TRUE) & theme(axis.title.y = element_blank()) |
-  plot_pred_lab_acc(pred_lab_acc_pub, "snRNASeq") & theme(axis.title.y = element_blank())
-
+# PANEL A, MAIN FIGURE
+summary_pred_by_percent_included <- pred_lab_acc_pub |> 
+  group_by(mod, initial, selection_procedure, strat, al, pred, pred_sel) |> 
+  summarize(mean_estimate = mean(na.omit(.estimate))) |> 
+  mutate(mod = case_when(mod == "tabulaVasc" ~ "scRNASeq\nVasculature",
+                         mod == "snRNASeq" ~ "snRNASeq\nPancreas cancer",
+                         mod == "scRNASeq" ~ "scRNASeq\nBreast cancer cell lines",
+                         mod == "scRNALung" ~ "scRNASeq\nLung cancer cell lines",
+                         mod == "liverAtlas" ~ "scRNASeq\nLiver",
+                         mod == "CyTOF" ~ "CyTOF\nBone marrow")) |> 
+  ggplot(aes(x = pred_sel, y = mean_estimate, colour = pred, group = pred)) +
+  geom_point() + 
+  geom_line() +
+  scale_colour_manual(values = al_colours()) +
+  labs(x = "Percentage of most confidently labeled cells", y = "Mean F1-score",
+       colour = "Self-training algorithm") +
+  facet_wrap(~mod, nrow = 1) +
+  whatsthatcell_theme() +
+  theme(legend.position = "bottom")
 
 
 ## Benchmarking with predictive labelling data
-scrna <- read_tsv(snakemake@input$scrna) |> 
+scrna <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-scRNASeq.tsv") |> #snakemake@input$scrna) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
-         cohort = "scRNASeq")
-snrna <- read_tsv(snakemake@input$snrna) |> 
+         cohort = "scRNASeq\nBreast cancer cell lines")
+snrna <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-snRNASeq.tsv") |> #snakemake@input$snrna) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
-         cohort = "snRNASeq")
+         cohort = "snRNASeq\nPancreas cancer")
+cytof <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-CyTOF.tsv") |> #snakemake@input$cytof) |> 
+  mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
+         selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
+         cohort = "CyTOF\nBone marrow")
+scrnaLung <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-scRNALung.tsv") |> 
+  mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
+         selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
+         cohort = "scRNASeq\nLung cancer cell lines")
+liverAtlas <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-tabulaVasc.tsv") |> 
+  mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
+         selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
+         cohort = "scRNASeq\nLiver")
+tabulaVasc <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-tabulaVasc.tsv") |> 
+  mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
+         selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
+         cohort = "scRNASeq\nVasculature")
 
-cytof <- read_tsv(snakemake@input$cytof) |> 
-  mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
-         selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
-         cohort = "CyTOF")
-
-acc <- bind_rows(scrna, snrna, cytof)
+acc <- bind_rows(scrna, snrna, cytof, scrnaLung, liverAtlas, tabulaVasc)
 
 cell_nums <- as.character(sort(unique(acc$cell_num)))
 acc$cell_num <- factor(acc$cell_num, levels = cell_nums)
@@ -117,15 +163,16 @@ lr_vs_rf <- acc_gap |>
          cell_selection = gsub("top", "", cell_selection),
          cell_selection = paste0(cell_selection, "%"),
          cell_selection = factor(cell_selection, levels = c("10%", "50%", "100%"))) |> 
-  filter(selection_procedure == "MarkerSeurat-clustering" & cell_num == 100, .metric == "f_meas") |> 
+  filter(selection_procedure == "highest-entropy-AL" & cell_num == 100, .metric == "f_meas") |> 
   ggplot(aes(x = method, y = gap, fill = pred_labeller)) +
   geom_boxplot() +
   scale_fill_manual(values = c("#DA94D4", "#7EA3CC")) +
   labs(x = "Cell type assignment method", y = "% change in F1-score",
-       fill = "Self-\ntraining\nalgorithm") +
-  facet_wrap(~cohort + cell_selection, scales = "free", nrow = 1) +
+       fill = "Self-training algorithm") +
+  facet_wrap(~cohort + cell_selection, scales = "free", nrow = 2) +
   whatsthatcell_theme() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1), 
+        legend.position = "bottom")
 
 # Compare improvement to original accuracy by selection procedure
 comp_dataset <- acc_gap |> 
@@ -162,29 +209,45 @@ plot_comp <- function(df, ncol, ylab = "", xlab = ""){
 }
 
 cytof_gap <- comp_dataset |> 
-  filter(cohort == "CyTOF") |> 
+  filter(cohort == "CyTOF\nBone marrow") |> 
   plot_comp(1, ylab = "Label") +
-  labs(title = "CyTOF")
-
+  labs(title = "CyTOF - Bone marrow")
 scrnaseq_gap <- comp_dataset |> 
-  filter(cohort == "scRNASeq") |> 
+  filter(cohort == "scRNASeq\nBreast cancer cell lines") |> 
   plot_comp(2, xlab = "label") +
-  labs(title = "scRNASeq")
-
+  labs(title = "scRNASeq - Breast cancer cell lines")
 snrnaseq_gap <- comp_dataset |> 
-  filter(cohort == "snRNASeq") |> 
+  filter(cohort == "snRNASeq\nPancreas cancer") |> 
   plot_comp(2) +
-  labs(title = "snRNASeq")
+  labs(title = "snRNASeq - Pancreas cancer")
+scrnalung_gap <- comp_dataset |> 
+  filter(cohort == "scRNASeq\nLung cancer cell lines") |> 
+  plot_comp(2, ylab = "Label") + 
+  labs(title = "scRNASeq - Lung cancer cell lines")
+liverAtlas_gap <- comp_dataset |> 
+  filter(cohort == "scRNASeq\nLiver") |> 
+  plot_comp(2, ylab = "Label") + 
+  labs(title = "scRNASeq - Liver")
+tabulaVasc_gap <- comp_dataset |> 
+  filter(cohort == "scRNASeq\nVasculature") |> 
+  plot_comp(2, xlab = "label") +
+  labs(title = "scRNASeq - Vasculature")
 
-gap_comb <- (cytof_gap | scrnaseq_gap | snrnaseq_gap) + 
-  plot_layout(guides = "collect", widths = c(0.65, 1, 1))
+gap_comb <- ((cytof_gap | scrnaseq_gap | liverAtlas_gap)) /
+  ((scrnalung_gap | tabulaVasc_gap | snrnaseq_gap)) + 
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
 
 # Detecting mislabelled cells
-cytof <- snakemake@input$mislabelled_cytof
-scrna <- snakemake@input$mislabelled_scrna
-snrna <- snakemake@input$mislabelled_snrna
+cytof <- list.files("output/v8/identify_mislabelled/CyTOF", full.names = TRUE) #snakemake@input$mislabelled_cytof
+scrna <- list.files("output/v8/identify_mislabelled/scRNASeq", full.names = TRUE) #snakemake@input$mislabelled_scrna
+snrna <- list.files("output/v8/identify_mislabelled/snRNASeq", full.names = TRUE) #snakemake@input$mislabelled_snrna
+scrnaLung <- list.files("output/v8/identify_mislabelled/scRNALung", full.names = TRUE) # snakemake@input$mislabelled_scrnalung
+scrnaVasc <- list.files("output/v8/identify_mislabelled/tabulaVasc", full.names = TRUE) # snakemake@input$mislabelled_scrnalung
+scrnaLiver <- list.files("output/v8/identify_mislabelled/liverAtlas//", full.names = TRUE) # snakemake@input$mislabelled_scrnalung
 
-mislabelled_pred <- lapply(c(cytof, scrna, snrna), function(x){
+
+mislabelled_pred <- lapply(c(cytof, scrna, snrna, scrnaLung, scrnaVasc, scrnaLiver), function(x){
   df <- read_tsv(x)
   probs <- select(df, -c(cell_id, pred_type, corr_cell_type, gt_cell_type, params))
   
@@ -194,21 +257,57 @@ mislabelled_pred <- lapply(c(cytof, scrna, snrna), function(x){
   select(df, cell_id, entropy, pred_type, corr_cell_type, gt_cell_type, params)
 }) |> bind_rows() |> 
   separate(params, c("rm_mod", "modality", "rm_pred", "predAlg", "rm_seed", "seed")) |> 
-  select(-starts_with("rm"))
+  select(-starts_with("rm")) 
 
-mislabelled_pred_plot <- mislabelled_pred |> 
+mislabelled_pred_plot1 <- mislabelled_pred |> 
+  filter(modality == "CyTOF" | modality == "tabulaVasc" | modality == "liverAtlas") |>
   mutate(cell_is_corrupt = corr_cell_type != gt_cell_type,
          predAlg = case_when(predAlg == "multinom" ~ "LR",
-                             predAlg == "rf" ~ "RF")) |> 
+                             predAlg == "rf" ~ "RF"),
+         modality = case_when(modality == "CyTOF" ~ "CyTOF - Bone marrow",
+                              modality == "liverAtlas" ~ "scRNASeq - Liver",
+                              modality == "tabulaVasc" ~ "scRNASeq - Vasculature")) |> 
   ggplot(aes(x = gt_cell_type, y = entropy, fill = cell_is_corrupt)) +
   geom_boxplot() +
   scale_fill_manual(values = c("#8B80F9", "#F03560")) +
-  labs(x = "Ground truth cell type", y = "Scaled entropy", fill = "Cell corrupted\nduring training") +
+  labs(x = "Ground truth cell type", y = "Scaled entropy", fill = "Cell corrupted during training") +
+  facet_grid(predAlg~modality, scales = "free") +
+  whatsthatcell_theme() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.title.x = element_blank())
+
+mislabelled_pred_plot2 <- mislabelled_pred |> 
+  filter(modality == "scRNASeq" | modality == "snRNASeq" | modality == "scRNALung") |> 
+  mutate(cell_is_corrupt = corr_cell_type != gt_cell_type,
+         predAlg = case_when(predAlg == "multinom" ~ "LR",
+                             predAlg == "rf" ~ "RF"),
+         modality = case_when(modality == "scRNASeq" ~ "scRNASeq - Breast cancer cell lines",
+                              modality == "snRNASeq" ~ "snRNASeq - Pancreas cancer",
+                              modality == "scRNALung" ~ "scRNASeq - Lung cancer cell lines")) |> 
+  ggplot(aes(x = gt_cell_type, y = entropy, fill = cell_is_corrupt)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#8B80F9", "#F03560")) +
+  labs(x = "Ground truth cell type", y = "Scaled entropy", fill = "Cell corrupted during training") +
   facet_grid(predAlg~modality, scales = "free") +
   whatsthatcell_theme() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 
-pdf(snakemake@output$main, height = 14, width = 12)
+
+mislabelled_pred_plot <- mislabelled_pred_plot1 / mislabelled_pred_plot2 +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+pdf("output/v8/paper-figures/pred-labelling-test.pdf", height = 27, width = 16)
+  (summary_pred_by_percent_included /
+    lr_vs_rf /
+    wrap_elements(full = gap_comb + plot_layout(guides = "collect")) /
+    wrap_elements(full = mislabelled_pred_plot + plot_layout(guides = "collec"))) +
+    plot_layout(heights = c(0.45, 1.6, 3.7, 3.6)) +
+    plot_annotation(tag_levels = "A")
+dev.off()
+
+pdf("output/v8/paper-figures/pred-labelling-test.pdf", #snakemake@output$main, 
+    height = 20, width = 12)
   (wrap_elements(full = pred_lab_acc_plot + plot_layout(guides = "collect"))) /
     wrap_elements(full = lr_vs_rf & labs(title = "")) /
     wrap_elements(full = gap_comb) /
@@ -229,7 +328,8 @@ sup_acc_gap <- acc_gap |>
                                          selection_procedure == "highest-entropy-AL" ~ "AL highest entropy",
                                          selection_procedure == "lowest-maxp-AL" ~ "AL lowest maxp")) |> 
   mutate(pred_labeller = case_when(pred_labeller == "multinom" ~ "LR",
-                                   pred_labeller == "rf" ~ "RF"))
+                                   pred_labeller == "rf" ~ "RF")) |> 
+  mutate(cohort = gsub("\n", " - ", cohort))
   
 plot_sup_gap <- function(df, sel_cohort){
   filter(df, cohort == sel_cohort & .metric == "f_meas") |> 
@@ -240,77 +340,60 @@ plot_sup_gap <- function(df, sel_cohort){
     geom_boxplot() +
     scale_fill_manual(values = c("#DA94D4", "#7EA3CC")) +
     labs(x = "Cell type assignment method", y = "% change in F1-score",
-         fill = "Self-\ntraining\nalgorithm") +
+         fill = "Self-\ntraining\nalgorithm", title = sel_cohort) +
     facet_grid(cell_selection + cell_num~selection_procedure, scales = "free") +
     whatsthatcell_theme() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 }
 
-pdf(snakemake@output$sup_cytof, width = 12, height = 8)
-  plot_sup_gap(sup_acc_gap, "CyTOF")
+pdf("output/v8/paper-figures/Supp-CyTOF-f1-improvement.pdf", #snakemake@output$sup_cytof, 
+    width = 12, height = 8)
+  plot_sup_gap(sup_acc_gap, "CyTOF - Bone marrow")
 dev.off()
 
-pdf(snakemake@output$sup_scrna, width = 12, height = 8)
-  plot_sup_gap(sup_acc_gap, "scRNASeq")
+pdf("output/v8/paper-figures/Supp-scRNASeq-f1-improvement.pdf", #snakemake@output$sup_scrna, 
+    width = 15, height = 9)
+  plot_sup_gap(sup_acc_gap, "scRNASeq - Breast cancer cell lines")
 dev.off()
 
-pdf(snakemake@output$sup_snrna, width = 12, height = 8)
-  plot_sup_gap(sup_acc_gap, "snRNASeq")
+pdf("output/v8/paper-figures/Supp-snRNASeq-f1-improvement.pdf", #snakemake@output$sup_snrna,
+    width = 15, height = 9)
+  plot_sup_gap(sup_acc_gap, "snRNASeq - Pancreas cancer")
 dev.off()
 
-# ### As function of number of cells predictively labelled
-# test <- bind_rows(
-#   select(pred_lab_acc, method, cell_selection, multinom) |> 
-#     dplyr::rename(".estimate" = "multinom"),
-#   baseline_acc
-# ) |> 
-#   filter(cell_selection != "top200") |> 
-#   mutate(cell_selection = factor(cell_selection, c("baseline", "top10", "top50", "top100"))) |> 
-#   #filter(method == "Random-Forest,10,0.4,100,NA,0,MarkerSeurat-clustering,kap,NA,scRNASeq") |>
-#   separate(method, c("alg", "knn", "res", "cell_num", "initial", "seed", 
-#                      "selection_procedure", ".metric", "AL_alg", "cohort"), sep = ",",
-#            remove = FALSE) |> 
-#   filter(.metric == "sensitivity") |> 
-#   filter(initial == "NA" | is.na(initial) | initial == "random") |> 
-#   filter(AL_alg == "NA" | is.na(AL_alg) | AL_alg == "multinom")
-  
-# test |> 
-#   filter(alg == "Random-Forest", selection_procedure == "random") |> 
-#   ggplot(aes(x = cell_selection, y = .estimate, group = method, colour = cell_num)) +
-#   geom_point() +
-#   geom_line() +
-#   facet_grid(selection_procedure ~ cohort + alg) +
-#   whatsthatcell_theme()
 
-# left_join(pred_lab_acc, 
-#           select(baseline_acc, -cell_selection), 
-#           by = "method") |> 
-#   #pivot_wider(names_from = "cell_selection", values_from = "multinom")
-#   pivot_longer()
+pdf("output/v8/paper-figures/Supp-scRNALung-f1-improvement.pdf", #snakemake@output$sup_scrna_lung,
+    width = 15, height = 9)
+  plot_sup_gap(sup_acc_gap, "scRNASeq - Lung cancer cell lines")
+dev.off()
 
-# med_gap <- acc_gap |> 
-#   filter(.metric == "f_meas") |> 
-#   filter(initial == "NA" | is.na(initial) | initial == "random") |> 
-#   filter(AL_alg == "NA" | is.na(AL_alg) | AL_alg == "multinom") |> 
-#   group_by(method, cell_num, selection_procedure, cohort, cell_selection, pred_labeller) |> 
-#   summarize(median_gap = median(na.omit(gap)))
+pdf("output/v8/paper-figures/Supp-liverAtlas-f1-improvement.pdf", #snakemake@output$sup_liverAtlas,
+    width = 15, height = 9)
+  plot_sup_gap(sup_acc_gap, "scRNASeq - Liver")
+dev.off()
 
-# med_gap |> 
-#   filter(pred_labeller == "multinom" & method ) |> 
-#   ggplot(aes(x = cell_selection, y = median_gap, colour = cell_num)) +
-#   geom_line() +
-#   facet_grid(selection_procedure ~ cohort + method) +
-#   whatsthatcell_theme()
+pdf("output/v8/paper-figures/Supp-tabulaVasc-f1-improvement.pdf", #snakemake@output$sup_tabulaVasc,
+    width = 15, height = 9)
+  plot_sup_gap(sup_acc_gap, "scRNASeq - Vasculature")
+dev.off()
 
 
-# med_gap |> 
-#   filter(cell_selection != "top200") |> 
-#   mutate(cell_selection = factor(cell_selection, levels = c("top10", "top50", "top100"))) |> 
-#   filter(pred_labeller == "multinom" & method == "CyTOF-LDA" & cell_num == 100, cohort == "CyTOF" &
-#          selection_procedure == "0.05-maxp-AL") |> 
-#   ggplot(aes(x = cell_selection, y = median_gap)) +
-#   geom_point() 
-#   #geom_line()# +
-#   # facet_grid(selection_procedure ~ cohort + method) +
-#   # whatsthatcell_theme()
+
+# Initial cell number annotation dependence
+pdf("output/v8/paper-figures/supp-pred-lab-num-cells.pdf", height = 5, width = 12)
+  acc_gap |> 
+    filter(.metric == "f_meas" & selection_procedure == "highest-entropy-AL") |> 
+    mutate(gap = abs(gap),
+           cell_selection = case_when(cell_selection == "top10" ~ "10%",
+                                      cell_selection == "top50" ~ "50%",
+                                      cell_selection == "top100" ~ "100%"),
+           cell_selection = factor(cell_selection, levels = c("10%", "50%", "100%"))) |> 
+    ggplot(aes(x = method, y = gap, fill = as.factor(cell_num))) +
+    geom_boxplot() +
+    labs(x = "Cell type assignment method", fill = "Number of cells\nin self-learning\ntraining set",
+         y = "Absolute change in F1-score for self-learning over baseline") +
+    facet_wrap(~cell_selection) +
+    whatsthatcell_theme() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+dev.off()
 
