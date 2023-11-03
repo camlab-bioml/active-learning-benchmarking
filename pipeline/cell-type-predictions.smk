@@ -66,7 +66,6 @@ cell_type_predictions = {
     'CyTOF': expand_predictions_by_mod("CyTOF"),
     'scRNALung': expand_predictions_by_mod("scRNALung"),
     'liverAtlas': expand_predictions_by_mod("liverAtlas"),
-    'liverAtlas2': expand_predictions_by_mod("liverAtlas2"),
     'tabulaVasc': expand_predictions_by_mod("tabulaVasc")
 }
 

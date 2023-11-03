@@ -4,8 +4,15 @@ suppressPackageStartupMessages({
 })
 source("pipeline/whatsthatcell-helpers.R")
 
-runtimes <- list.files("output/v8/results/runtime/", full.names = TRUE)
-runtimes <- lapply(runtimes, read_tsv) |> 
+runtimes <- lapply(snakemake@input$runtimes, function(x){
+  read_tsv(x) |>
+    mutate(modality = case_when(grepl("CyTOF", basename(x)) ~ "CyTOF\nBone marrow",
+                              grepl("liverAtlas", basename(x)) ~ "scRNASeq\nLiver",
+                              grepl("scRNALung", basename(x)) ~ "scRNASeq\nLung cancer cell lines",
+                              grepl("scRNASeq", basename(x)) ~ "scRNASeq\nBreast cancer cell lines",
+                              grepl("snRNASeq", basename(x)) ~ "snRNASeq\nPancreas cancer",
+                              grepl("tabulaVasc", basename(x)) ~ "scRNASeq\nVasculature"))
+  }) |> 
   bind_rows()
 
 min_y <- min(runtimes$time)
@@ -51,9 +58,9 @@ ar_runtime_p <- filter(runtimes, is.na(AL_alg)) |>
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank())
 
-pdf("output/v8/paper-figures/runtime.pdf", height = 6, width = 15)
+pdf(snakemake@output$runtime, height = 6, width = 16)
   (rf_runtime_p | lr_runtime_p | ar_runtime_p) +
-    plot_layout(widths = c(1, 1, 0.4))
+    plot_layout(widths = c(1, 1, 0.8))
 dev.off()
 
 

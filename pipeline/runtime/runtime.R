@@ -5,7 +5,7 @@ suppressPackageStartupMessages({
   library(data.table)
   library(caret)
   library(Seurat)
-  devtools::load_all("../leader")
+  devtools::load_all("/leader")
 })
 source("pipeline/whatsthatcell-helpers.R")
 set.seed(1)

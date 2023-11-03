@@ -8,9 +8,7 @@ suppressPackageStartupMessages({
 })
 source("pipeline/whatsthatcell-helpers.R")
 
-f <- list.files("output/v8/results/imbalance2/acc", full.names = TRUE)
-
-acc <- lapply(f, read_tsv) |> 
+acc <- lapply(snakemake@input$f, read_tsv) |> 
   bind_rows() |> 
   select(-c(rand, corrupted, .estimator)) |> 
   pivot_wider(names_from = balance, values_from = .estimate) |> 
@@ -34,7 +32,13 @@ plot_acc <- function(acc, metric, x_axis = FALSE){
                                .metric == "f_meas" ~ "F1-score",
                                .metric == "kap" ~ "Kappa",
                                .metric == "mcc" ~ "Matthews correlation coefficient",
-                               .metric == "sensitivity" ~ "Sensitivity")) |> 
+                               .metric == "sensitivity" ~ "Sensitivity"),
+           modality = case_when(modality == "CyTOF" ~ "CyTOF\nBone marrow",
+                                modality == "liverAtlas" ~ "scRNASeq\nLiver",
+                                modality == "scRNALung" ~ "scRNASeq\nLung cancer cell lines",
+                                modality == "scRNASeq" ~ "scRNASeq\nBreast cancer cell lines",
+                                modality == "snRNASeq" ~ "snRNASeq\nPancreas cancer",
+                                modality == "tabulaVasc" ~ "scRNASeq\nVasculature")) |> 
     ggplot(aes(x = method, y = improvement, fill = strat)) +
     geom_hline(yintercept = 0, color = "black") +
     geom_boxplot() +
@@ -66,7 +70,7 @@ acc <- mutate(acc, strat = factor(strat, levels = plotting_order))
 
 
 acc1 <- filter(acc, modality %in% c("CyTOF", "scRNASeq", "snRNASeq"))
-pdf("output/v8/paper-figures/imbalance2-fig1.pdf", height = 12, width = 14)
+pdf(snakemake@output$out1, height = 12, width = 14)
   (plot_acc(acc1, "bal_accuracy") /
       plot_acc(acc1, "f_meas") /
       plot_acc(acc1, "kap") /
@@ -77,8 +81,8 @@ pdf("output/v8/paper-figures/imbalance2-fig1.pdf", height = 12, width = 14)
 dev.off()
 
 
-acc2 <- filter(acc, modality %in% c("scRNALung", "tabulaLiver", "tabulaVasc"))
-pdf("output/v8/paper-figures/imbalance2-fig2.pdf", height = 12, width = 14)
+acc2 <- filter(acc, modality %in% c("scRNALung", "liverAtlas", "tabulaVasc"))
+pdf(snakemake@output$out2, height = 12, width = 14)
   (plot_acc(acc2, "bal_accuracy") /
       plot_acc(acc2, "f_meas") /
       plot_acc(acc2, "kap") /
@@ -170,7 +174,7 @@ top3_p <- mutate(top_3, strat = factor(strat, levels = top3_order)) |>
   whatsthatcell_theme() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-pdf("output/v8/paper-figures/imbalance2-figure-barplot.pdf", height = 6, width = 12)
+pdf(snakemake@output$out3, height = 6, width = 12)
   top1_p / top3_p
 dev.off()
 

@@ -8,18 +8,18 @@ def get_entropy_files(AL_type):
     return f
 
 active_learner = {
-    'maxp_box_rand_0': expand(output + 'figures/uncertainty-{modality}-Init-{initial}-strat-{AL_type}-al-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-seed-{s}.pdf',
-        modality = modalities, AL_type = ['Active-Learning_maxp', 'Active-Learning_entropy'], initial = initial_selections, 
-        AL_alg = AL_methods,
-        rand = 0, 
-        corrupt = corruption_percentages,
-        s = train_test_seeds),
-    'maxp_box_cor_0': expand(output + 'figures/uncertainty-{modality}-Init-{initial}-strat-{AL_type}-al-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-seed-{s}.pdf',
-        modality = modalities, AL_type = ['Active-Learning_maxp', 'Active-Learning_entropy'], initial = initial_selections, 
-        AL_alg = AL_methods,
-        rand = random_percentages, 
-        corrupt = 0,
-        s = train_test_seeds),
+    # 'maxp_box_rand_0': expand(output + 'figures/uncertainty-{modality}-Init-{initial}-strat-{AL_type}-al-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-seed-{s}.pdf',
+    #     modality = modalities, AL_type = ['Active-Learning_maxp', 'Active-Learning_entropy'], initial = initial_selections, 
+    #     AL_alg = AL_methods,
+    #     rand = 0, 
+    #     corrupt = corruption_percentages,
+    #     s = train_test_seeds),
+    # 'maxp_box_cor_0': expand(output + 'figures/uncertainty-{modality}-Init-{initial}-strat-{AL_type}-al-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-seed-{s}.pdf',
+    #     modality = modalities, AL_type = ['Active-Learning_maxp', 'Active-Learning_entropy'], initial = initial_selections, 
+    #     AL_alg = AL_methods,
+    #     rand = random_percentages, 
+    #     corrupt = 0,
+    #     s = train_test_seeds),
 
     'subset_al_entropy_rand_0': expand(output + 'data/{modality}/{AL_type}/AL-batches-subset/Init_{initial}-strat-{strat}-ALAlg-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-knn_neighbors-NA-resolution-NA-seed-{s}-{subset_val}_cells.tsv', 
         modality = modalities, initial = selection_expansion_dict['Active-Learning_entropy']['initial'], AL_type = ['Active-Learning_entropy'], strat = selection_expansion_dict['Active-Learning_entropy']['strategy'], 
@@ -66,13 +66,13 @@ selection_expansion_dict2 = {
                'corruption': corruption_percentages}
 }
 
-rule visualize_entropies:
-    input:
-        f = lambda wildcards: get_entropy_files(wildcards.AL_type)
-    output:
-        box = output + 'figures/uncertainty-{modality}-Init-{initial}-strat-{AL_type}-al-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-seed-{s}.pdf'
-    script:
-        'visualize/plot-entropies.R'
+# rule visualize_entropies:
+#     input:
+#         f = lambda wildcards: get_entropy_files(wildcards.AL_type)
+#     output:
+#         box = output + 'figures/uncertainty-{modality}-Init-{initial}-strat-{AL_type}-al-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-seed-{s}.pdf'
+#     script:
+#         'visualize/plot-entropies.R'
 
 rule create_AL_training_batches:
     input:

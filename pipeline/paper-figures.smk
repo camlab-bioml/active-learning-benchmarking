@@ -2,13 +2,15 @@
 final_figures = {
     'fig1': output + "paper-figures/figure1.pdf",
     # 'fig2': output + "paper-figures/lr-and-rf-heatmaps.pdf",
-    # 'fig3_imb': output + "paper-figures/imbalance-main-figure.pdf",
-    # 'fig3_acc': output + "paper-figures/overall-accuracies.pdf",
+    'fig3_imb': expand(output + "paper-figures/imbalance-main-figure-{metric}.pdf", metric = ['bal_accuracy', 'kap', 'mcc', 'f_meas', 'sensitivity']),
+    'fig3_acc': output + "paper-figures/overall-accuracies.pdf",
     'fig4': output + "paper-figures/rem-cell-type.pdf",
-    # 'fig5': output + "paper-figures/pred-labelling.pdf",
+    'fig5': output + "paper-figures/pred-labelling.pdf",
 
     # # supplemental figures
-    # 'ar_params': output + "paper-figures/Supp-AR-res.pdf"
+    'ar_params': output + "paper-figures/Supp-AR-res.pdf",
+    'imbal2': output + "paper-figures/imbalance2-fig1.pdf",
+    'marker_corr': output + 'paper-figures/AR-marker-corruption.pdf'
 }
 
 # Figure 1
@@ -66,10 +68,15 @@ rule imbalance_plot:
     input:
         cytof_acc = output + "imbalance/acc/imbalance-acc-CyTOF.tsv",
         scrna_acc = output + "imbalance/acc/imbalance-acc-scRNASeq.tsv",
-        snrna_acc = output + "imbalance/acc/imbalance-acc-snRNASeq.tsv"
+        snrna_acc = output + "imbalance/acc/imbalance-acc-snRNASeq.tsv",
+        scrna_lung_acc = output + "imbalance/acc/imbalance-acc-scRNALung.tsv",
+        liver_acc = output + "imbalance/acc/imbalance-acc-liverAtlas.tsv",
+        vasc_acc = output + "imbalance/acc/imbalance-acc-tabulaVasc.tsv"
     output:
-        main_fig = output + "paper-figures/imbalance-main-figure.pdf",
-        sup_fig = output + "paper-figures/imbalance-supplementary.pdf"
+        main_fig = output + "paper-figures/imbalance-main-figure-{metric}.pdf",
+        supp_1 = output + "paper-figures/imbalance-supplementary-1-{metric}.pdf",
+        supp_2 = output + "paper-figures/imbalance-supplementary-2-{metric}.pdf",
+        supp_3 = output + "paper-figures/imbalance-supplementary-3-{metric}.pdf"
     script:
         "figures/imbalance-plots.R"
 
@@ -112,15 +119,27 @@ rule self_training:
         scrna = output + "new/pred2/benchmark-predictive-labeling-scRNASeq.tsv",
         snrna = output + "new/pred2/benchmark-predictive-labeling-snRNASeq.tsv",
         cytof = output + "new/pred2/benchmark-predictive-labeling-CyTOF.tsv",
+        scrna_lung = output + "new/pred2/benchmark-predictive-labeling-scRNALung.tsv",
+        tabulaVasc = output + "new/pred2/benchmark-predictive-labeling-tabulaVasc.tsv",
+        liverAtlas = output + "new/pred2/benchmark-predictive-labeling-liverAtlas.tsv",
         mislabelled_cytof = expand(output + "identify_mislabelled/CyTOF/Pred_alg-{al}-corr-10-seed-{s}-cellNum-250-cells.tsv", al = ['rf', 'multinom'], s = train_test_seeds),
         mislabelled_scrna = expand(output + "identify_mislabelled/scRNASeq/Pred_alg-{al}-corr-10-seed-{s}-cellNum-250-cells.tsv", al = ['rf', 'multinom'], s = train_test_seeds),
         mislabelled_snrna = expand(output + "identify_mislabelled/snRNASeq/Pred_alg-{al}-corr-10-seed-{s}-cellNum-250-cells.tsv", al = ['rf', 'multinom'], s = train_test_seeds),
+        mislabelled_scrna_lung = expand(output + "identify_mislabelled/scRNALung/Pred_alg-{al}-corr-10-seed-{s}-cellNum-250-cells.tsv", al = ['rf', 'multinom'], s = train_test_seeds),
+        mislabelled_tabulaVasc = expand(output + "identify_mislabelled/tabulaVasc/Pred_alg-{al}-corr-10-seed-{s}-cellNum-250-cells.tsv", al = ['rf', 'multinom'], s = train_test_seeds),
+        mislabelled_liver = expand(output + "identify_mislabelled/liverAtlas/Pred_alg-{al}-corr-10-seed-{s}-cellNum-250-cells.tsv", al = ['rf', 'multinom'], s = train_test_seeds),
     output:
-        supp = output + "paper-figures/Supp-pred-labelling-acc.pdf",
+        supp1 = output + 'paper-figures/Supp-self-training-1.pdf',
+        supp2 = output + 'paper-figures/Supp-self-training-2.pdf',
+        #supp = output + "paper-figures/Supp-pred-labelling-acc.pdf",
         main = output + "paper-figures/pred-labelling.pdf",
-        sup_cytof = output + "paper-figures/Supp-CyTOF-f1-improvement.pdf",
-        sup_scrna = output + "paper-figures/Supp-scRNASeq-f1-improvement.pdf",
-        sup_snrna = output + "paper-figures/Supp-snRNASeq-f1-improvement.pdf"
+        sup_cytof = output + "paper-figures/Supp-pred-lab-CyTOF-f1-improvement.pdf",
+        sup_scrna = output + "paper-figures/Supp-pred-lab-scRNASeq-f1-improvement.pdf",
+        sup_snrna = output + "paper-figures/Supp-pred-lab-snRNASeq-f1-improvement.pdf",
+        sup_scrna_lung = output + "paper-figures/Supp-pred-lab-scRNALung-f1-improvement.pdf",
+        sup_tabulaVasc = output + "paper-figures/Supp-pred-lab-tabulaVasc-f1-improvement.pdf",
+        sup_liverAtlas = output + "paper-figures/Supp-pred-lab-liverAtlas-f1-improvement.pdf",
+        cell_num_dep = output + "paper-figures/Supp-pred-lab-cell-num-dep.pdf"
     script:
         "figures/pred-labeling.R"
 
@@ -140,3 +159,22 @@ rule AR_params:
         knn = output + "paper-figures/Supp-AR-knn.pdf"
     script:
         "figures/AR-params.R"
+
+# imbalance2
+rule vis_imbalance2:
+    input:
+        f = expand(output + "imbalance2/acc/imbalance-acc-{mod}.tsv", mod = modalities)
+    output:
+        out1 = output + "paper-figures/imbalance2-fig1.pdf",
+        out2 = output + "paper-figures/imbalance2-fig2.pdf",
+        out3 = output + "paper-figures/imbalance2-figure-barplot.pdf",
+    script:
+        "figures/imbalance2.R"
+
+rule plot_rem_markers:
+    input:
+        accs = expand(output + 'results/marker_corruption/overall-{modality}-benchmarking-accuracies.tsv', modality = modalities)
+    output:
+        fig = output + 'paper-figures/AR-marker-corruption.pdf'
+    script:
+        'marker-removal/visualize-results.R'

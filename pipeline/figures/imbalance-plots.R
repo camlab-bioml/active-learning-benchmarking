@@ -15,7 +15,7 @@ vasc_acc <- read_tsv(snakemake@input$vasc_acc)
 
 # Calculate improvement
 imbalance_score <- bind_rows(sc_acc, sn_acc, cy_acc, lung_acc, liver_acc, vasc_acc) |> 
-  dplyr::filter(.metric == "bal_accuracy") |> 
+  dplyr::filter(.metric == snakemake@wildcards$metric) |> 
   pivot_wider(names_from = "similarity", values_from = ".estimate") |> 
   mutate(similar = (`imbalanced-similar` - `balanced-similar`) / `balanced-similar`,
          different =  (`imbalanced-different` - `balanced-different`) / `balanced-different`) |> 
@@ -50,7 +50,7 @@ plotting_order <- filter(comb_imb_score, modality == "snRNASeq" & al == "RF" & i
   arrange(mean_estimate) |> 
   pull(strat)
 
-pdf(snakemake@output$main_fig, height = 3, width = 7)
+pdf(snakemake@output$main_fig, height = 4.5, width = 9)
   filter(comb_imb_score, modality == "snRNASeq" & al == "RF" & init == "ranking") |> 
     mutate(strat = factor(strat, levels = plotting_order)) |> 
     ggplot(aes(x = comp, y = diff, fill = strat)) +
@@ -146,13 +146,12 @@ cytof_supp <- plot_supplementary_imb(comb_imb_score, "CyTOF", "Random-Forest",
                                      "CyTOF - Bone marrow") /
   plot_supplementary_imb(comb_imb_score, "CyTOF", "CyTOF-LDA", NULL, TRUE)
 
-scrna_lung_supp <- plot_supplementary_imb(comb_imb_score, "scRNALung", "Random-Forest", 
-                                          "scRNALung - Lung cancer cell lines") /
-  plot_supplementary_imb(comb_imb_score, "scRNALung", "SCN-labels") /
-  plot_supplementary_imb(comb_imb_score, "scRNALung", "SVM-rejection") /
-  plot_supplementary_imb(comb_imb_score, "scRNALung", "scmap-clusters") /
-  plot_supplementary_imb(comb_imb_score, "scRNALung", "scmap-sc") /
-  plot_supplementary_imb(comb_imb_score, "scRNALung", "singleR-labels", NULL, TRUE)
+scrna_lung_supp <- plot_supplementary_imb(comb_imb_score, "snRNASeq", "Random-Forest", 
+                                          "snRNASeq - Pancreas cancer") /
+  plot_supplementary_imb(comb_imb_score, "snRNASeq", "SCN-labels") /
+  plot_supplementary_imb(comb_imb_score, "snRNASeq", "SVM-rejection") /
+  plot_supplementary_imb(comb_imb_score, "snRNASeq", "scmap-sc") /
+  plot_supplementary_imb(comb_imb_score, "snRNASeq", "singleR-labels", NULL, TRUE)
 
 pdf(snakemake@output$supp_3, height = 16, width = 8)
   (cytof_supp / scrna_lung_supp) +

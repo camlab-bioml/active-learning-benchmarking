@@ -1,9 +1,10 @@
 
-modalities = ['scRNASeq', 'CyTOF', 'snRNASeq', 'scRNALung', 'tabulaLiver', 'tabulaVasc']
+modalities = ['scRNASeq', 'CyTOF', 'snRNASeq', 'scRNALung', 'liverAtlas', 'tabulaVasc']
 train_test_seeds = list(range(10))
 output = 'output/v8/'
 runtime = {
-    #'runtime_vals': expand(output + 'results/runtime/timing-{modality}-seed-{s}.csv', modality = modalities, s = train_test_seeds),
+    'runtime_vals': expand(output + 'results/runtime/timing-{modality}-seed-{s}.csv', modality = modalities, s = train_test_seeds),
+    'plot': output + 'paper-figures/runtime.pdf'
 }
 
 
@@ -16,10 +17,10 @@ rule runtime:
     script:
         'runtime/runtime.R'
 
-rule combine_runtime:
+rule plot_runtime:
     input:
-        expand(output + 'results/runtime/timing-{modality}-seed-{s}.csv', modality = modalities, s = train_test_seeds),
+        runtimes = expand(output + 'results/runtime/timing-{modality}-seed-{s}.csv', modality = modalities, s = train_test_seeds),
     output:
-        'all.txt'
-    shell:
-        'test'
+        runtime = output + 'paper-figures/runtime.pdf'
+    script:
+        'figures/runtime.R'

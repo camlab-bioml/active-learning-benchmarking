@@ -147,7 +147,6 @@ rule CyTOF_LDA_marker_rem:
         labels = output + 'marker_corruption/AR/CyTOF-percent-rem-{rem_percentage}-seed-{s}-100-cells.tsv'
     output:
         prediction = output + 'marker_corruption/rare-subtype-benchmarking/Init_{initial}-CyTOF-sel_{selection_procedure}-strat-{strat}-ALAlg-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-knn_neighbors-{neighbors}-resolution-{res}-CyTOF-LDA-predictions-seed-{s}-{cell_num}-cells-percent-rem-{rem_percentage}.tsv'
-                     #output + 'marker_corruption/rare-subtype-benchmarking/Init_{initial}-{modality}-sel_{selection_procedure}-strat-{strat}-ALAlg-{AL_alg}-rand_sel-{rand}-corr-{corrupt}-knn_neighbors-{neighbors}-resolution-{res}-{method}-predictions-seed-{s}-{cell_num}-cells-percent-rem-{rem_percentage}.tsv'
     script:
         'cell-type-assignment/CyTOFLDA.R'
 

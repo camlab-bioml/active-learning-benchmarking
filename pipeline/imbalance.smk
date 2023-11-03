@@ -152,8 +152,8 @@ for element in rna_imb_all:
 
 imbalance = {
     'CyTOF': expand(CyTOF_imb_predictions, modality = ['CyTOF'], s = train_test_seeds),
-    'RNA': expand(scRNA_imb_predictions, modality = ['scRNASeq', 'snRNASeq'], s = train_test_seeds),
-    'acc': expand(output + 'imbalance/acc/imbalance-acc-{modality}.tsv', modality = modalities),
+    #'RNA': expand(scRNA_imb_predictions, modality = ['scRNASeq', 'snRNASeq'], s = train_test_seeds),
+    'acc': expand(output + 'imbalance/acc/imbalance-acc-{modality}.tsv', modality = 'liverAtlas'),
     #'gt_predicted_alluv': rna_imb_pred_alluvs,
     #'test_freq': output + 'imbalance/cell_type_freqs/test-dataset-cellType-freq.tsv',
     #'report': output + 'reports/imbalance/benchmark-imbalance.html'

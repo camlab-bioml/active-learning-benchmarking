@@ -21,10 +21,16 @@ tabulavasc <- read_tsv(snakemake@input$vasc_summary) |>
 
 summary <- bind_rows(cytof, scrnaseq, snrnaseq, scrnalung, liverAtlas, tabulavasc) |> 
   mutate(AL_alg = case_when(AL_alg == "rf" ~ "RF",
-                            AL_alg == "multinom" ~ "LR")) |> 
+                            AL_alg == "multinom" ~ "LR"),
+         cohort = case_when(cohort == "tabulaVasc" ~ "scRNASeq\nVasculature",
+                            cohort == "snRNASeq" ~ "snRNASeq\nPancreas cancer",
+                            cohort == "scRNASeq" ~ "scRNASeq\nBreast cancer cell lines",
+                            cohort == "scRNALung" ~ "scRNASeq\nLung cancer cell lines",
+                            cohort == "liverAtlas" ~ "scRNASeq\nLiver",
+                            cohort == "CyTOF" ~ "CyTOF\nBone marrow")) |> 
   ggplot(aes(as.factor(num_missing_cells), y = criterion_val, colour = gt_rem, group = gt_rem)) +
-  geom_point() +
-  geom_line() +
+  geom_line(linewidth = 1.5) +
+  geom_point(size = 4) +
   ylim(0, 1) +
   scale_colour_manual(values = c("#ffa600", "#9763ff")) +
   labs(x = "Number of missing cells", y = "Scaled median entropy") +
@@ -105,8 +111,9 @@ entropies <- (scrna_box | snrna_box | cytof_box) +
   plot_layout(guides = "collect", widths = c(2, 2, 1)) &
   theme(legend.position = 'bottom', plot.tag = element_text(size = 18))
 
-pdf(snakemake@output$main, height = 12, width = 14)
+pdf(snakemake@output$main, height = 11, width = 14)
   summary / entropies + 
+    plot_layout(heights = c(0.9, 1)) +
     plot_annotation(tag_levels = "A")
 dev.off()
 

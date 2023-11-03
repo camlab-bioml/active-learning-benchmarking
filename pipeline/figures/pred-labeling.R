@@ -7,7 +7,7 @@ suppressPackageStartupMessages({
 source("pipeline/whatsthatcell-helpers.R")
 
 ### PREDICTIVE LABELLING ACCURACY
-pred_lab_acc <- read_tsv("output/v8/new/pred-labeling-accuracy.tsv")#snakemake@input$acc)
+pred_lab_acc <- read_tsv(snakemake@input$acc)
 
 # SUPPLEMENTAL FILE
 pdf(snakemake@output$supp1, height = 14, width = 10)
@@ -100,29 +100,29 @@ summary_pred_by_percent_included <- pred_lab_acc_pub |>
   whatsthatcell_theme() +
   theme(legend.position = "bottom")
 
-
+save.image('debug-pred-lab-plot.Rdata')
 ## Benchmarking with predictive labelling data
-scrna <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-scRNASeq.tsv") |> #snakemake@input$scrna) |> 
+scrna <- read_tsv(snakemake@input$scrna) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
          cohort = "scRNASeq\nBreast cancer cell lines")
-snrna <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-snRNASeq.tsv") |> #snakemake@input$snrna) |> 
+snrna <- read_tsv(snakemake@input$snrna) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
          cohort = "snRNASeq\nPancreas cancer")
-cytof <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-CyTOF.tsv") |> #snakemake@input$cytof) |> 
+cytof <- read_tsv(snakemake@input$cytof) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
          cohort = "CyTOF\nBone marrow")
-scrnaLung <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-scRNALung.tsv") |> 
+scrnaLung <- read_tsv(snakemake@input$scrna_lung) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
          cohort = "scRNASeq\nLung cancer cell lines")
-liverAtlas <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-tabulaVasc.tsv") |> 
+liverAtlas <- read_tsv(snakemake@input$tabulaVasc) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
          cohort = "scRNASeq\nLiver")
-tabulaVasc <- read_tsv("output/v8/new/pred2/benchmark-predictive-labeling-tabulaVasc.tsv") |> 
+tabulaVasc <- read_tsv(snakemake@input$liverAtlas) |> 
   mutate(AL_alg = sub(".*-ALAlg-", "",  selection_procedure),
          selection_procedure = sub("-ALAlg-.*", "", selection_procedure),
          cohort = "scRNASeq\nVasculature")
@@ -239,12 +239,12 @@ gap_comb <- ((cytof_gap | scrnaseq_gap | liverAtlas_gap)) /
   theme(legend.position = "bottom")
 
 # Detecting mislabelled cells
-cytof <- list.files("output/v8/identify_mislabelled/CyTOF", full.names = TRUE) #snakemake@input$mislabelled_cytof
-scrna <- list.files("output/v8/identify_mislabelled/scRNASeq", full.names = TRUE) #snakemake@input$mislabelled_scrna
-snrna <- list.files("output/v8/identify_mislabelled/snRNASeq", full.names = TRUE) #snakemake@input$mislabelled_snrna
-scrnaLung <- list.files("output/v8/identify_mislabelled/scRNALung", full.names = TRUE) # snakemake@input$mislabelled_scrnalung
-scrnaVasc <- list.files("output/v8/identify_mislabelled/tabulaVasc", full.names = TRUE) # snakemake@input$mislabelled_scrnalung
-scrnaLiver <- list.files("output/v8/identify_mislabelled/liverAtlas//", full.names = TRUE) # snakemake@input$mislabelled_scrnalung
+cytof <- snakemake@input$mislabelled_cytof
+scrna <- snakemake@input$mislabelled_scrna
+snrna <- snakemake@input$mislabelled_snrna
+scrnaLung <- snakemake@input$mislabelled_scrna_lung
+scrnaVasc <- snakemake@input$mislabelled_tabulaVasc
+scrnaLiver <- snakemake@input$mislabelled_liver
 
 
 mislabelled_pred <- lapply(c(cytof, scrna, snrna, scrnaLung, scrnaVasc, scrnaLiver), function(x){
@@ -297,22 +297,12 @@ mislabelled_pred_plot <- mislabelled_pred_plot1 / mislabelled_pred_plot2 +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
 
-pdf("output/v8/paper-figures/pred-labelling-test.pdf", height = 27, width = 16)
-  (summary_pred_by_percent_included /
+pdf(snakemake@output$main, height = 27, width = 16)
+    (summary_pred_by_percent_included /
     lr_vs_rf /
     wrap_elements(full = gap_comb + plot_layout(guides = "collect")) /
     wrap_elements(full = mislabelled_pred_plot + plot_layout(guides = "collec"))) +
     plot_layout(heights = c(0.45, 1.6, 3.7, 3.6)) +
-    plot_annotation(tag_levels = "A")
-dev.off()
-
-pdf("output/v8/paper-figures/pred-labelling-test.pdf", #snakemake@output$main, 
-    height = 20, width = 12)
-  (wrap_elements(full = pred_lab_acc_plot + plot_layout(guides = "collect"))) /
-    wrap_elements(full = lr_vs_rf & labs(title = "")) /
-    wrap_elements(full = gap_comb) /
-    mislabelled_pred_plot +
-    plot_layout(heights = c(1, 1.1, 1.3, 1.4)) +
     plot_annotation(tag_levels = "A")
 dev.off()
 
@@ -346,41 +336,35 @@ plot_sup_gap <- function(df, sel_cohort){
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 }
 
-pdf("output/v8/paper-figures/Supp-CyTOF-f1-improvement.pdf", #snakemake@output$sup_cytof, 
-    width = 12, height = 8)
+pdf(snakemake@output$sup_cytof, width = 12, height = 8)
   plot_sup_gap(sup_acc_gap, "CyTOF - Bone marrow")
 dev.off()
 
-pdf("output/v8/paper-figures/Supp-scRNASeq-f1-improvement.pdf", #snakemake@output$sup_scrna, 
-    width = 15, height = 9)
+pdf(snakemake@output$sup_scrna, width = 15, height = 9)
   plot_sup_gap(sup_acc_gap, "scRNASeq - Breast cancer cell lines")
 dev.off()
 
-pdf("output/v8/paper-figures/Supp-snRNASeq-f1-improvement.pdf", #snakemake@output$sup_snrna,
-    width = 15, height = 9)
+pdf(snakemake@output$sup_snrna, width = 15, height = 9)
   plot_sup_gap(sup_acc_gap, "snRNASeq - Pancreas cancer")
 dev.off()
 
 
-pdf("output/v8/paper-figures/Supp-scRNALung-f1-improvement.pdf", #snakemake@output$sup_scrna_lung,
-    width = 15, height = 9)
+pdf(snakemake@output$sup_scrna_lung, width = 15, height = 9)
   plot_sup_gap(sup_acc_gap, "scRNASeq - Lung cancer cell lines")
 dev.off()
 
-pdf("output/v8/paper-figures/Supp-liverAtlas-f1-improvement.pdf", #snakemake@output$sup_liverAtlas,
-    width = 15, height = 9)
+pdf(snakemake@output$sup_liverAtlas, width = 15, height = 9)
   plot_sup_gap(sup_acc_gap, "scRNASeq - Liver")
 dev.off()
 
-pdf("output/v8/paper-figures/Supp-tabulaVasc-f1-improvement.pdf", #snakemake@output$sup_tabulaVasc,
-    width = 15, height = 9)
+pdf(snakemake@output$sup_tabulaVasc, width = 15, height = 9)
   plot_sup_gap(sup_acc_gap, "scRNASeq - Vasculature")
 dev.off()
 
 
 
 # Initial cell number annotation dependence
-pdf("output/v8/paper-figures/supp-pred-lab-num-cells.pdf", height = 5, width = 12)
+pdf(snakemake@output$cell_num_dep, height = 5, width = 12)
   acc_gap |> 
     filter(.metric == "f_meas" & selection_procedure == "highest-entropy-AL") |> 
     mutate(gap = abs(gap),

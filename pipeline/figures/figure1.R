@@ -29,7 +29,7 @@ scRNALung <- readRDS(snakemake@input$scRNALung)
 scRNALung <- runTSNE(scRNALung)
 liverAtlas <- readRDS(snakemake@input$liverAtlas)
 liverAtlas <- runTSNE(liverAtlas)
-tabulaVasc <- readRDS(snakemake@input@tabulaVasc)
+tabulaVasc <- readRDS(snakemake@input$tabulaVasc)
 tabulaVasc <- runTSNE(tabulaVasc)
 
 plot_dim_red <- function(sce, mod, include_axis = FALSE,

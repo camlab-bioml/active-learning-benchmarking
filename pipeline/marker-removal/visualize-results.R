@@ -6,12 +6,12 @@ source("pipeline/whatsthatcell-helpers.R")
 
 acc <- lapply(snakemake@input$accs, function(x){
   read_tsv(x) |> 
-    mutate(cohort = case_when(grepl("CyTOF", basename(x)) ~ "CyTOF",
-                              grepl("liverAtlas", basename(x)) ~ "liverAtlas",
-                              grepl("scRNALung", basename(x)) ~ "scRNALung",
-                              grepl("scRNASeq", basename(x)) ~ "scRNASeq",
-                              grepl("snRNASeq", basename(x)) ~ "snRNASeq",
-                              grepl("tabulaVasc", basename(x)) ~ "tabulaVasc"))
+    mutate(cohort = case_when(grepl("CyTOF", basename(x)) ~ "CyTOF\nBone marrow",
+                              grepl("liverAtlas", basename(x)) ~ "scRNASeq\nLiver",
+                              grepl("scRNALung", basename(x)) ~ "scRNASeq\nLung cancer cell lines",
+                              grepl("scRNASeq", basename(x)) ~ "scRNASeq\nBreast cancer cell lines",
+                              grepl("snRNASeq", basename(x)) ~ "snRNASeq\nPancreas cancer",
+                              grepl("tabulaVasc", basename(x)) ~ "scRNASeq\nVasculature"))
 }) |> bind_rows()
 
 acc <- filter(acc, .metric == "sensitivity")
