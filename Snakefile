@@ -22,7 +22,7 @@ evaluation_methods_dict = {
 evaluation_methods = list(chain.from_iterable(list(evaluation_methods_dict.values())))
 train_test_seeds = list(range(10))
 annotators = ['GroundTruth']
-modalities = ['scRNASeq', 'CyTOF', 'snRNASeq', 'scRNALung', 'liverAtlas', 'liverAtlas2', 'tabulaVasc']
+modalities = ['scRNASeq', 'CyTOF', 'snRNASeq', 'scRNALung', 'liverAtlas', 'tabulaVasc']
 data_splits = ['train', 'test']
 initial_selections = ['ranking', 'random']
 
@@ -155,30 +155,31 @@ selection_expansion_dict = {
     }
 }
 
-#include: 'pipeline/process-data.smk'
-#include: 'pipeline/cell-type-predictions.smk'
-#include: 'pipeline/simulate-active-learning.smk'
+include: 'pipeline/process-data.smk'
+include: 'pipeline/cell-type-predictions.smk'
+include: 'pipeline/simulate-active-learning.smk'
 include: 'pipeline/imbalance.smk'
 include: 'pipeline/visualizations.smk'
-# include: 'pipeline/imbalance2.smk'
-#include: 'pipeline/rem-cell-type.smk'
-# include: 'pipeline/predictive-labeling2.smk'
-# include: 'pipeline/cell-type-similarity.smk'
-# #include: 'pipeline/runtime.smk'
-#include: 'pipeline/cell-type-sel-rem-markers.smk'
-#include: 'pipeline/paper-figures.smk'
+include: 'pipeline/imbalance2.smk'
+include: 'pipeline/rem-cell-type.smk'
+include: 'pipeline/predictive-labeling2.smk'
+include: 'pipeline/cell-type-similarity.smk'
+include: 'pipeline/runtime.smk'
+include: 'pipeline/cell-type-sel-rem-markers.smk'
+include: 'pipeline/paper-figures.smk'
 
 rule all:
     input:
-        #process_data_output.values(),
-        #[expand(x, s = train_test_seeds) for x in list(cell_type_predictions.values())],
-        #active_learner.values(),
+        process_data_output.values(),
+        [expand(x, s = train_test_seeds) for x in list(cell_type_predictions.values())],
+        active_learner.values(),
         viz.values(),
-        # # imbalance.values(),
-        # # imbalance2.values(),
-        # rem_cell_type.values(),
-        # pred_lab2.values(),
-        # similarity.values(),
-        #AR_remove_markers.values(),
-        # final_figures.values()
+        imbalance.values(),
+        imbalance2.values(),
+        rem_cell_type.values(),
+        pred_lab2.values(),
+        similarity.values(),
+        AR_remove_markers.values(),
+        runtime.values(),
+        final_figures.values()
 
