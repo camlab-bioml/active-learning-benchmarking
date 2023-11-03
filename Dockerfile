@@ -14,4 +14,11 @@ RUN pip3 install numpy pandas sklearn joblib
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-RUN git clone --depth 1 https://github.com/tidyverse/ggplot2.git
+RUN Rscript -e "install.packages('pdftools')"
+RUN Rscript -e "install.packages('umap')"
+RUN Rscript -e "install.packages('DescTools')"
+RUN Rscript -e "install.packages('Seurat')"
+RUN Rscript -e "remotes::install_github('vh-d/RPortfolioSimilarity')"
+
+RUN git clone https://github.com/Michael-Geuenich/singleCellNet.git
+RUN git clone https://github.com/camlab-bioml/leader.git
